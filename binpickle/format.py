@@ -42,6 +42,11 @@ class FileHeader(NamedTuple):
             raise ValueError('invalid padding')
         return cls(v, off)
 
+    @classmethod
+    def read(cls, file, **kwargs):
+        buf = file.read(HEADER_FORMAT.size)
+        return cls.decode(buf, **kwargs)
+
     def trailer_pos(self):
         "Get the position of the start of the file trailer."
         if self.length >= HEADER_FORMAT.size + TRAILER_FORMAT.size:
