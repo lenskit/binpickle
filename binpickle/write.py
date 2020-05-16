@@ -36,6 +36,7 @@ class BinPickler:
 
     def __init__(self, filename, *, align=False):
         self.filename = filename
+        self.align = align
         self._file = open(filename, 'wb')
         self.entries = []
 
@@ -75,6 +76,16 @@ class BinPickler:
     def _write_buffer(self, buf):
         mv = memoryview(buf)
         offset = self._file.tell()
+
+        if self.align:
+            off2 = _align_pos(offset)
+            if off2 > offset:
+                nzeds = off2 - offset
+                zeds = b'\x00' * nzeds
+                self._file.write(zeds)
+                assert self._file.tell() == off2
+                offset = off2
+
         length = mv.nbytes
         cksum = adler32(buf)
 

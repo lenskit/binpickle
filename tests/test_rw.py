@@ -68,8 +68,8 @@ def test_pickle_array(tmp_path, rng: np.random.Generator):
         assert all(a2 == a)
 
 
-@pytest.mark.parametrize('direct', [True, False])
-def test_pickle_frame(tmp_path, rng: np.random.Generator, direct):
+@pytest.mark.parametrize(['direct', 'align'], [(True, True), (False, False), (False, True)])
+def test_pickle_frame(tmp_path, rng: np.random.Generator, direct, align):
     "Pickle a Pandas data frame"
     file = tmp_path / 'data.bpk'
 
@@ -79,7 +79,7 @@ def test_pickle_frame(tmp_path, rng: np.random.Generator, direct):
         'score': rng.normal(10, 2, 5000)
     })
 
-    with BinPickler(file) as w:
+    with BinPickler(file, align=align) as w:
         w.dump(df)
 
     with BinPickleFile(file, direct=direct) as bpf:
