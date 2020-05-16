@@ -6,9 +6,10 @@ channels:
 deps:
 - python
 - flit>=2
-- flake8
 - msgpack-python
 - numpy>=1.17
 - pandas>=1.0
 - pytest
 - pytest-cov
+- sphinx
+- flake8
