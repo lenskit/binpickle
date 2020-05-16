@@ -10,7 +10,8 @@ home-page = "https://binpickle.lenskit.org"
 classifiers = ["License :: OSI Approved :: MIT License"]
 requires-python = ">= 3.7"
 requires = [
-    "pickle5; python_version < '3.8'"
+    "pickle5; python_version < '3.8'",
+    "msgpack"
 ]
 
 [tool.flit.metadata.requires-extra]
