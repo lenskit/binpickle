@@ -1,0 +1,13 @@
+# Dev environment
+name: binpickle
+channels:
+- conda-forge
+- defaults
+deps:
+- python
+- flit>=2
+- flake8
+- numpy>=1.17
+- pandas>=1.0
+- pytest
+- pytest-cov

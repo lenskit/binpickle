@@ -1,0 +1,25 @@
+[build-system]
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "binpickle"
+author = "Michael Ekstrand"
+author-email = "michaelekstrand@boisestate.edu"
+home-page = "https://binpickle.lenskit.org"
+classifiers = ["License :: OSI Approved :: MIT License"]
+requires = [
+    "pickle5; python_version < '3.8'"
+]
+
+[tool.flit.metadata.requires-extra]
+dev = [
+    "flake8"
+]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pandas >= 1.0",
+    "numpy >= 1.17"
+]
+doc = ["sphinx"]
