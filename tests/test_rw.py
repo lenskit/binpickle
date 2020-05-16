@@ -83,6 +83,7 @@ def test_pickle_frame(tmp_path, rng: np.random.Generator, direct, align):
         w.dump(df)
 
     with BinPickleFile(file, direct=direct) as bpf:
+        assert not bpf.find_errors()
         df2 = bpf.load()
         print(df2)
         assert all(df2.columns == df.columns)
@@ -101,6 +102,7 @@ def test_pickle_arrays(tmp_path, a):
         w.dump(a)
 
     with BinPickleFile(file) as bpf:
+        assert not bpf.find_errors()
         assert len(bpf.entries) in (1, 2)
         a2 = bpf.load()
         assert len(a2) == len(a)

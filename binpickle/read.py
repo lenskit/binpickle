@@ -58,6 +58,35 @@ class BinPickleFile:
         up = pickle.Unpickler(io.BytesIO(p_bytes), buffers=buf_gen)
         return up.load()
 
+    def find_errors(self):
+        """
+        Verify binpickle data structure validity.  If the file is invalid, returns
+        a list of errors.
+
+        Fatal index errors will result in a failure to open the file, so things such as
+        invalid msgpack formats in the index won't be detected here.  This method checks
+        buffer checksums, offset overlaps, and such.
+        """
+        errors = []
+
+        i_sum = adler32(self._index_buf)
+        if i_sum != self.trailer.checksum:
+            errors.append(f'invalid index checksum ({i_sum} != {self.trailer.checksum})')
+
+        position = 16
+        for i, e in enumerate(self.entries):
+            if e.offset < position:
+                errors.append(f'entry {i}: offset {e.offset} before expected start {position}')
+            buf = self._read_buffer(e, direct=True)
+            ndec = len(buf)
+            if ndec != e.dec_length:
+                errors.append(f'entry {i}: decoded to {ndec} bytes, expected {e.dec_length}')
+            cks = adler32(buf)
+            if cks != e.checksum:
+                errors.append('entry {i}: invalid checksum ({cks} != {e.checksum}')
+
+        return errors
+
     def close(self):
         """
         Close the BinPickle file.  If the file is in direct mode, all
