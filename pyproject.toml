@@ -21,6 +21,7 @@ dev = [
 test = [
     "pytest",
     "pytest-cov",
+    "hypothesis",
     "pandas >= 1.0",
     "numpy >= 1.17"
 ]

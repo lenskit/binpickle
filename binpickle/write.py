@@ -3,6 +3,7 @@ import mmap
 import warnings
 import logging
 import io
+import mmap
 from zlib import adler32
 import msgpack
 
@@ -10,6 +11,15 @@ from .compat import pickle
 from .format import *
 
 _log = logging.getLogger(__name__)
+
+
+def _align_pos(pos, size=mmap.PAGESIZE):
+    "Advance a position to be aligned."
+    rem = pos % size
+    if rem:
+        return pos + (size - rem)
+    else:
+        return pos
 
 
 class BinPickler:
@@ -20,9 +30,11 @@ class BinPickler:
     Args:
         filename(str or pathlib.Path):
             The path to the file to write.
+        align(bool):
+            If ``True``, align buffers to the page size.
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename, *, align=False):
         self.filename = filename
         self._file = open(filename, 'wb')
         self.entries = []

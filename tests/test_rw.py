@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 
 import pytest
+from hypothesis import given, assume
+import hypothesis.strategies as st
+from hypothesis.extra.numpy import arrays, scalar_dtypes
 
 from binpickle.read import BinPickleFile
 from binpickle.write import BinPickler
@@ -86,3 +89,19 @@ def test_pickle_frame(tmp_path, rng: np.random.Generator, direct):
         for c in df2.columns:
             assert all(df2[c] == df[c])
         del df2
+
+
+@given(arrays(scalar_dtypes(), st.integers(500, 10000)))
+def test_pickle_arrays(tmp_path, a):
+    "Pickle a random NumPy array"
+    assume(not any(np.isnan(a)))
+    file = tmp_path / 'data.bpk'
+
+    with BinPickler(file) as w:
+        w.dump(a)
+
+    with BinPickleFile(file) as bpf:
+        assert len(bpf.entries) in (1, 2)
+        a2 = bpf.load()
+        assert len(a2) == len(a)
+        assert all(a2 == a)
