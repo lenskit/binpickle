@@ -20,10 +20,16 @@ class BinPickleFile:
     Args:
         filename(str or pathlib.Path):
             The name of the file to load.
+        direct(bool):
+            If ``True``, returned objects zero-copy when possible, but cannot
+            outlast the :class:`BinPickleFile` instance.  If ``False``, they
+            are copied from the file and do not need to be freed before
+            :meth:`close` is called.
     """
 
-    def __init__(self, filename):
+    def __init__(self, filename, *, direct=False):
         self.filename = filename
+        self.direct = direct
         self._file = open(filename, 'rb')
         self.header = FileHeader.read(self._file)
         self._map = mmap.mmap(self._file.fileno(), self.header.length,
@@ -44,7 +50,7 @@ class BinPickleFile:
         """
         if not self.entries:
             raise ValueError('empty pickle file has no objects')
-        p_bytes = self._read_buffer(self.entries[-1])
+        p_bytes = self._read_buffer(self.entries[-1], direct=True)
         _log.debug('unpickling %d bytes and %d buffers',
                    len(p_bytes), len(self.entries) - 1)
 
@@ -77,9 +83,15 @@ class BinPickleFile:
         self.entries = [IndexEntry.from_repr(e) for e in msgpack.unpackb(self._index_buf)]
         _log.debug('read %d entries from file', len(self.entries))
 
-    def _read_buffer(self, entry: IndexEntry):
+    def _read_buffer(self, entry: IndexEntry, *, direct=None):
         start = entry.offset
         length = entry.enc_length
         end = start + length
-        _log.debug('reading %d bytes from %d', length, start)
-        return self._mv[start:end]
+        if direct is None:
+            direct = self.direct
+        if direct:
+            _log.debug('mapping %d bytes from %d', length, start)
+            return self._mv[start:end]
+        else:
+            _log.debug('copying %d bytes from %d', length, start)
+            return self._map[start:end]

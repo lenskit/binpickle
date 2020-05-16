@@ -35,7 +35,7 @@ def test_write_buf(tmp_path, rng: np.random.Generator):
         w._write_buffer(a)
         w._finish_file()
 
-    with BinPickleFile(file) as bpf:
+    with BinPickleFile(file, direct=True) as bpf:
         assert len(bpf.entries) == 1
         e = bpf.entries[0]
         assert e.dec_length == a.nbytes
@@ -63,10 +63,10 @@ def test_pickle_array(tmp_path, rng: np.random.Generator):
         a2 = bpf.load()
         assert len(a2) == len(a)
         assert all(a2 == a)
-        del a2
 
 
-def test_pickle_frame(tmp_path, rng: np.random.Generator):
+@pytest.mark.parametrize('direct', [True, False])
+def test_pickle_frame(tmp_path, rng: np.random.Generator, direct):
     "Pickle a Pandas data frame"
     file = tmp_path / 'data.bpk'
 
@@ -79,7 +79,7 @@ def test_pickle_frame(tmp_path, rng: np.random.Generator):
     with BinPickler(file) as w:
         w.dump(df)
 
-    with BinPickleFile(file) as bpf:
+    with BinPickleFile(file, direct=direct) as bpf:
         df2 = bpf.load()
         print(df2)
         assert all(df2.columns == df.columns)
