@@ -9,7 +9,9 @@ such as splitting arrays into blocks.
 
 from ._base import Codec
 from .null import Null
+from .blosc import Blosc
 
 KNOWN_CODECS = [
-    Null
+    Null,
+    Blosc
 ]
