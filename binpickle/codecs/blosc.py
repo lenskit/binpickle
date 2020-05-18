@@ -53,4 +53,6 @@ class Blosc(Codec):
             out[pos:e1] = dmv[:n1]
             if n1 < n:
                 out.extend(dmv[n1:])
-
+            pos += n
+        if len(out) > pos:
+            del out[pos:]
