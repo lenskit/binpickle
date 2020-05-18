@@ -22,6 +22,27 @@ def _align_pos(pos, size=mmap.PAGESIZE):
         return pos
 
 
+class CKOut:
+    """
+    Wrapper for binary output that computes checksums and sizes on the fly.
+    """
+
+    def __init__(self, base):
+        self.bytes = 0
+        self.checksum = 1
+        self.delegate = base
+
+    def write(self, data):
+        # get a memory view so we have a portable count of bytes
+        mv = memoryview(data)
+        self.bytes += mv.nbytes
+        self.checksum = adler32(data, self.checksum)
+        return self.delegate.write(data)
+
+    def flush(self):
+        self.delegate.flush()
+
+
 class BinPickler:
     """
     Save an object into a binary pickle file.  This is like :class:`pickle.Pickler`,
@@ -87,13 +108,14 @@ class BinPickler:
                 offset = off2
 
         length = mv.nbytes
-        cksum = adler32(mv)
 
         _log.debug('writing %d bytes at position %d', length, offset)
-        self._file.write(mv)
+        cko = CKOut(self._file)
+        cko.write(mv)
         assert self._file.tell() == offset + length
+        assert cko.bytes == length
 
-        self.entries.append(IndexEntry(offset, length, length, cksum))
+        self.entries.append(IndexEntry(offset, length, length, cko.checksum))
 
     def _write_index(self):
         buf = msgpack.packb([e.to_repr() for e in self.entries])
