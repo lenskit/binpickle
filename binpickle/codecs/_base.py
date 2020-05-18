@@ -32,7 +32,6 @@ class Codec(ABC):
                 taking a :class:`bytes`.
         """
 
-    @abstractmethod
     def decode(self, buf):
         """
         Decode a buffer.
@@ -42,4 +41,20 @@ class Codec(ABC):
 
         Returns:
             bytes-like: the decoded data
+        """
+
+        out = bytearray()
+        self.decode_to(buf, out)
+        return out
+
+    @abstractmethod
+    def decode_to(self, buf, out):
+        """
+        Decode a buffer into a bytearray.
+
+        Args:
+            buf(bytes-like): the buffer to decode.
+            out(bytearray):
+                the bytearray to receive the output.  This method will resize the
+                bytearray as needed to accomodate the output.
         """

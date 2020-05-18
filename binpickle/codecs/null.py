@@ -12,5 +12,8 @@ class Null(Codec):
     def encode_to(self, buf, out):
         out.write(buf)
 
-    def decode(self, buf):
+    def decode(self, buf, length=None):
         return buf
+
+    def decode_to(self, buf, out):
+        out[:] = buf
