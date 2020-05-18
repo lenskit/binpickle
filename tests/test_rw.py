@@ -93,8 +93,8 @@ def test_pickle_frame(tmp_path, rng: np.random.Generator, direct, align):
 
 
 @given(arrays(scalar_dtypes(), st.integers(500, 10000)))
-def test_pickle_arrays(tmp_path, a):
-    "Pickle a random NumPy array"
+def test_many_arrays(tmp_path, a):
+    "Pickle random NumPy arrays"
     assume(not any(np.isnan(a)))
     file = tmp_path / 'data.bpk'
 

@@ -87,10 +87,10 @@ class BinPickler:
                 offset = off2
 
         length = mv.nbytes
-        cksum = adler32(buf)
+        cksum = adler32(mv)
 
         _log.debug('writing %d bytes at position %d', length, offset)
-        self._file.write(buf)
+        self._file.write(mv)
         assert self._file.tell() == offset + length
 
         self.entries.append(IndexEntry(offset, length, length, cksum))
