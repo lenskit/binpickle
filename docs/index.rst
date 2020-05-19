@@ -9,7 +9,7 @@ is efficiently serializing scikit-style statistical and machine learning models.
 
 BinPickle supports a few useful features on top of standard pickling:
 
-* Optional per-buffer compression and transcoding with :py:mod:`numcodecs`.
+* Optional per-buffer compression
 * Memory-mapped buffers (when uncompressed) for efficiently sharing
 
 Contents
