@@ -139,7 +139,7 @@ jobs:
     - name: Copy Conda packages
       run: |
         ddir=dist/${{matrix.condaplat}}
-        mkdir $ddir
+        mkdir -p $ddir
         cp -v $CONDA/conda-bld/${{matrix.condaplat}}/* $ddir
         ls -lR dist
       shell: bash
