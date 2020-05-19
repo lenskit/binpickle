@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Run tests
+    name: Test with Python ${{matrix.python}} on ${{matrix.platform}}
     runs-on: ${{matrix.platform}}-latest
     strategy:
       matrix:
@@ -33,7 +33,19 @@ jobs:
 
     - name: Install environment
       run: |
-        pip install wheel
+        pip install -U pip setuptools wheel
+
+    - name: Get Pip cache dir
+      id: pip-cache
+      run: |
+        echo "::set-output name=dir::$(pip cache dir)"
+      shell: bash
+
+    - name: Cache Pip wheels
+      uses: actions/cache@1
+      with:
+        path: ${{ steps.pip-cache.outputs.dir }}
+        key: ${{ runner.os }}-pip
 
     - name: Install package
       run: |
