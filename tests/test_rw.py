@@ -1,3 +1,6 @@
+import itertools as it
+from tempfile import TemporaryDirectory
+from pathlib import Path
 import numpy as np
 import pandas as pd
 
@@ -8,6 +11,12 @@ from hypothesis.extra.numpy import arrays, scalar_dtypes
 
 from binpickle.read import BinPickleFile
 from binpickle.write import BinPickler
+
+RW_CONFIGS = it.product(
+    [BinPickler, BinPickler.mappable, BinPickler.compressed],
+    [False, True]
+)
+RW_PARAMS = ['writer', 'direct']
 
 
 @pytest.fixture
@@ -52,6 +61,25 @@ def test_write_buf(tmp_path, rng: np.random.Generator):
         del b2
 
 
+@given(st.lists(st.binary()))
+def test_write_encoded_arrays(tmp_path, arrays):
+    file = tmp_path / 'data.bpk'
+
+    with BinPickler.compressed(file) as w:
+        for a in arrays:
+            w._write_buffer(a)
+        w._finish_file()
+
+    with BinPickleFile(file) as bpf:
+        assert not bpf.find_errors()
+        assert len(bpf.entries) == len(arrays)
+        for e, a in zip(bpf.entries, arrays):
+            assert e.codec
+            assert e.dec_length == len(a)
+            dat = bpf._read_buffer(e)
+            assert dat == a
+
+
 def test_pickle_array(tmp_path, rng: np.random.Generator):
     "Pickle a NumPy array"
     file = tmp_path / 'data.bpk'
@@ -68,8 +96,8 @@ def test_pickle_array(tmp_path, rng: np.random.Generator):
         assert all(a2 == a)
 
 
-@pytest.mark.parametrize(['direct', 'align'], [(True, True), (False, False), (False, True)])
-def test_pickle_frame(tmp_path, rng: np.random.Generator, direct, align):
+@pytest.mark.parametrize(RW_PARAMS, RW_CONFIGS)
+def test_pickle_frame(tmp_path, rng: np.random.Generator, writer, direct):
     "Pickle a Pandas data frame"
     file = tmp_path / 'data.bpk'
 
@@ -79,7 +107,7 @@ def test_pickle_frame(tmp_path, rng: np.random.Generator, direct, align):
         'score': rng.normal(10, 2, 5000)
     })
 
-    with BinPickler(file, align=align) as w:
+    with writer(file) as w:
         w.dump(df)
 
     with BinPickleFile(file, direct=direct) as bpf:
@@ -93,17 +121,38 @@ def test_pickle_frame(tmp_path, rng: np.random.Generator, direct, align):
 
 
 @given(arrays(scalar_dtypes(), st.integers(500, 10000)))
-def test_many_arrays(tmp_path, a):
+def test_compress_many_arrays(tmp_path, a):
     "Pickle random NumPy arrays"
     assume(not any(np.isnan(a)))
-    file = tmp_path / 'data.bpk'
 
-    with BinPickler(file) as w:
-        w.dump(a)
+    with TemporaryDirectory('.test', 'binpickle') as path:
+        file = Path(path) / 'data.bpk'
 
-    with BinPickleFile(file) as bpf:
-        assert not bpf.find_errors()
-        assert len(bpf.entries) in (1, 2)
-        a2 = bpf.load()
-        assert len(a2) == len(a)
-        assert all(a2 == a)
+        with BinPickler.compressed(file) as w:
+            w.dump(a)
+
+        with BinPickleFile(file) as bpf:
+            assert not bpf.find_errors()
+            assert len(bpf.entries) in (1, 2)
+            a2 = bpf.load()
+            assert len(a2) == len(a)
+            assert all(a2 == a)
+
+
+@given(arrays(scalar_dtypes(), st.integers(500, 10000)))
+def test_map_many_arrays(a):
+    "Pickle random NumPy arrays"
+    assume(not any(np.isnan(a)))
+    with TemporaryDirectory('.test', 'binpickle') as path:
+        file = Path(path) / 'data.bpk'
+
+        with BinPickler.mappable(file) as w:
+            w.dump(a)
+
+        with BinPickleFile(file, direct=True) as bpf:
+            assert not bpf.find_errors()
+            assert len(bpf.entries) in (1, 2)
+            a2 = bpf.load()
+            assert len(a2) == len(a)
+            assert all(a2 == a)
+            del a2

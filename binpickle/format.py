@@ -95,7 +95,7 @@ class IndexEntry(NamedTuple):
     "The decoded length of the buffer in bytes."
     checksum: int
     "The Adler-32 checksum of the encoded buffer data."
-    codec: str = None
+    codec: tuple = None
     "The codec used to encode the buffer, or None."
 
     def to_repr(self):

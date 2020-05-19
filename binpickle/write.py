@@ -9,6 +9,7 @@ import msgpack
 
 from .compat import pickle
 from .format import *
+from . import codecs
 
 _log = logging.getLogger(__name__)
 
@@ -53,15 +54,28 @@ class BinPickler:
             The path to the file to write.
         align(bool):
             If ``True``, align buffers to the page size.
+        codec(binpickle.codecs.Codec or None):
+            The codec to use for encoding buffers.
     """
 
-    def __init__(self, filename, *, align=False):
+    def __init__(self, filename, *, align=False, codec=None):
         self.filename = filename
         self.align = align
         self._file = open(filename, 'wb')
         self.entries = []
+        self.codec = codec
 
         self._init_header()
+
+    @classmethod
+    def mappable(cls, filename):
+        "Convenience method to construct a pickler for memory-mapped use."
+        return cls(filename, align=True)
+
+    @classmethod
+    def compressed(cls, filename, codec=codecs.Blosc()):
+        "Convenience method to construct a pickler for compressed storage."
+        return cls(filename, codec=codec)
 
     def dump(self, obj):
         "Dump an object to the file. Can only be called once."
@@ -94,6 +108,14 @@ class BinPickler:
         self._file.write(h.encode())
         assert self._file.tell() == pos + 16
 
+    def _encode_buffer(self, buf, out):
+        if self.codec is None:
+            out.write(buf)
+            return None
+        else:
+            self.codec.encode_to(buf, out)
+            return (self.codec.NAME, self.codec.config())
+
     def _write_buffer(self, buf):
         mv = memoryview(buf)
         offset = self._file.tell()
@@ -111,11 +133,12 @@ class BinPickler:
 
         _log.debug('writing %d bytes at position %d', length, offset)
         cko = CKOut(self._file)
-        cko.write(mv)
-        assert self._file.tell() == offset + length
-        assert cko.bytes == length
+        c_spec = self._encode_buffer(buf, cko)
 
-        self.entries.append(IndexEntry(offset, length, length, cko.checksum))
+        assert self._file.tell() == offset + cko.bytes
+
+        self.entries.append(IndexEntry(offset, cko.bytes, length, cko.checksum,
+                                       c_spec))
 
     def _write_index(self):
         buf = msgpack.packb([e.to_repr() for e in self.entries])

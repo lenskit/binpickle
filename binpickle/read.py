@@ -9,6 +9,7 @@ import mmap
 
 from .compat import pickle
 from .format import *
+from .codecs import get_codec
 
 _log = logging.getLogger(__name__)
 
@@ -81,7 +82,7 @@ class BinPickleFile:
             ndec = len(buf)
             if ndec != e.dec_length:
                 errors.append(f'entry {i}: decoded to {ndec} bytes, expected {e.dec_length}')
-            cks = adler32(buf)
+            cks = adler32(self._read_buffer(e, direct=True, decode=False))
             if cks != e.checksum:
                 errors.append('entry {i}: invalid checksum ({cks} != {e.checksum}')
 
@@ -112,12 +113,20 @@ class BinPickleFile:
         self.entries = [IndexEntry.from_repr(e) for e in msgpack.unpackb(self._index_buf)]
         _log.debug('read %d entries from file', len(self.entries))
 
-    def _read_buffer(self, entry: IndexEntry, *, direct=None):
+    def _read_buffer(self, entry: IndexEntry, *, direct=None, decode=True):
         start = entry.offset
         length = entry.enc_length
         end = start + length
         if direct is None:
             direct = self.direct
+
+        if decode and entry.codec:
+            name, cfg = entry.codec
+            _log.debug('decoding %d bytes from %d with %s', length, start, name)
+            out = bytearray(entry.dec_length)
+            codec = get_codec(name, cfg)
+            codec.decode_to(self._mv[start:end], out)
+            return out
         if direct:
             _log.debug('mapping %d bytes from %d', length, start)
             return self._mv[start:end]
