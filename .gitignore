@@ -2,6 +2,7 @@
 /build
 /dist
 /.hypothesis
+*.egg-info/
 .coverage
 *.pyc
 __pycache__

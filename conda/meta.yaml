@@ -24,7 +24,6 @@ requirements:
   host:
     - python {{ python }}
     - pip
-    - flit-core
   run:
     - python
     - python-blosc

@@ -6,7 +6,6 @@ channels:
 dependencies:
 - python=3.8
 - pip
-- flit>=2
 - msgpack-python
 - python-blosc
 - numpy>=1.17
