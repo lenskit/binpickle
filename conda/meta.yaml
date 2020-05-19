@@ -2,7 +2,7 @@
 
 package:
   name: binpickle
-  {% if GIT_DESCRIBE_NUMBER > '0' %}
+  {% if environ.get('GIT_DESCRIBE_NUMBER', '0') > '0' %}
   version: {{data.get('version')}}.dev{{GIT_DESCRIBE_NUMBER}}+{{GIT_DESCRIBE_HASH}}
   {% else %}
   version: {{data.get('version')}}
@@ -13,7 +13,7 @@ source:
 
 build:
   noarch: python
-  script: python -m pip install --no-deps .
+  script: python -m pip install .
 
 requirements:
   host:
