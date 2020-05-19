@@ -45,7 +45,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
-        key: ${{ runner.os }}-pip
+        key: ${{ matrix.platform }}-py${{ matrix.python }}-pip
 
     - name: Install package
       run: |
