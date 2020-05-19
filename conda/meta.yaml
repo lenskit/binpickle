@@ -1,11 +1,11 @@
 {% set data = load_setup_py_data() %}
-
+{% set version = '0.1' %}
 package:
   name: binpickle
   {% if environ.get('GIT_DESCRIBE_NUMBER', '0') > '0' %}
-  version: {{data.get('version')}}.dev{{GIT_DESCRIBE_NUMBER}}+{{GIT_DESCRIBE_HASH}}
+  version: {{version}}.dev{{GIT_DESCRIBE_NUMBER}}+{{GIT_DESCRIBE_HASH}}
   {% else %}
-  version: {{data.get('version')}}
+  version: {{version}}
   {% endif %}
 
 about:
@@ -24,6 +24,7 @@ requirements:
   host:
     - python {{ python }}
     - pip
+    - flit-core
   run:
     - python
     - python-blosc
