@@ -1,0 +1,36 @@
+{% set data = load_setup_py_data() %}
+
+package:
+  name: binpickle
+  {% if GIT_DESCRIBE_NUMBER > '0' %}
+  version: {{data.get('version')}}.dev{{GIT_DESCRIBE_NUMBER}}+{{GIT_DESCRIBE_HASH}}
+  {% else %}
+  version: {{data.get('version')}}
+  {% endif %}
+
+source:
+  path: ../
+
+build:
+  noarch: python
+  script: python -m pip install --no-deps .
+
+requirements:
+  host:
+    - python {{ python }}
+    - pip
+  run:
+    - python
+    - python-blosc
+    - msgpack-python
+    - pickle5 #[py<38]
+
+test:
+  source_files:
+    - tests
+    - tests/*.py
+  requires:
+    - pytest
+    - hypothesis
+    - pandas>=1.0
+    - numpy>=1.17
