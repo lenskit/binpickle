@@ -21,6 +21,10 @@ def _split_blocks(buf, blocksize):
 
 
 class Blosc(Codec):
+    """
+    Blosc codec.
+    """
+
     NAME = 'blosc'
 
     def __init__(self, name='blosclz', level=9,

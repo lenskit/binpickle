@@ -18,6 +18,7 @@ Contents
 .. toctree::
    :maxdepth: 1
 
+   codecs
    format
 
 Inspiriation
