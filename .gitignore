@@ -2,5 +2,6 @@
 /build
 /dist
 /.hypothesis
+.coverage
 *.pyc
 __pycache__
