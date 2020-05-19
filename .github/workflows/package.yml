@@ -33,7 +33,7 @@ jobs:
 
     - name: Install environment
       run: |
-        pip install -U pip setuptools wheel
+        pip install -U setuptools wheel
 
     - name: Get Pip cache dir
       id: pip-cache
