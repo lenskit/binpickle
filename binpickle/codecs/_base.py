@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import io
 
+
 class Codec(ABC):
     """
     Base class for a codec.

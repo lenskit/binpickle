@@ -7,7 +7,7 @@ such as splitting arrays into blocks.
 .. _numcodecs: https://numcodecs.readthedocs.io/en/stable/
 """
 
-from ._base import Codec
+from ._base import Codec  # noqa: F401
 from .null import Null
 from .blosc import Blosc
 

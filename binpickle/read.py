@@ -1,14 +1,11 @@
-import os
 import mmap
-import warnings
 import logging
 import io
 from zlib import adler32
 import msgpack
-import mmap
 
 from .compat import pickle
-from .format import *
+from .format import FileHeader, IndexEntry, FileTrailer
 from .codecs import get_codec
 
 _log = logging.getLogger(__name__)

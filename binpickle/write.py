@@ -1,14 +1,12 @@
-import os
 import mmap
 import warnings
 import logging
 import io
-import mmap
 from zlib import adler32
 import msgpack
 
 from .compat import pickle
-from .format import *
+from .format import FileHeader, FileTrailer, IndexEntry
 from . import codecs
 
 _log = logging.getLogger(__name__)
@@ -145,7 +143,7 @@ class BinPickler:
         pos = self._file.tell()
         nbs = len(buf)
         _log.debug('writing %d index entries (%d bytes) at position %d',
-                    len(self.entries), nbs, pos)
+                   len(self.entries), nbs, pos)
         self._file.write(buf)
         ft = FileTrailer(pos, nbs, adler32(buf))
         self._file.write(ft.encode())
