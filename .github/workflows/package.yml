@@ -42,7 +42,7 @@ jobs:
       shell: bash
 
     - name: Cache Pip wheels
-      uses: actions/cache@1
+      uses: actions/cache@v1
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
         key: ${{ runner.os }}-pip
