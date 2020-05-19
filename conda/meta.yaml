@@ -8,12 +8,17 @@ package:
   version: {{data.get('version')}}
   {% endif %}
 
+about:
+  home: https://binpickle.lenskit.org
+  license: MIT
+  license_file: LICENSE
+  summary: efficient binary storage of ML models
+
 source:
   path: ../
 
 build:
-  noarch: python
-  script: python -m pip install .
+  script: python -m pip install --no-deps .
 
 requirements:
   host:
@@ -34,3 +39,5 @@ test:
     - hypothesis
     - pandas>=1.0
     - numpy>=1.17
+  commands:
+    - python -m pytest tests
