@@ -3,7 +3,7 @@ name: binpickle
 channels:
 - conda-forge
 - defaults
-deps:
+dependencies:
 - python
 - flit>=2
 - msgpack-python
