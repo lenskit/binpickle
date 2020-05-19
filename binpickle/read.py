@@ -130,3 +130,15 @@ class BinPickleFile:
         else:
             _log.debug('copying %d bytes from %d', length, start)
             return self._map[start:end]
+
+
+def load(file):
+    """
+    Load an object from a BinPickle file.
+
+    Args:
+        file(str or pathlib.Path): The file to load.
+    """
+
+    with BinPickleFile(file) as bpf:
+        return bpf.load()
