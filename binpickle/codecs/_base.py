@@ -4,6 +4,9 @@ import io
 class Codec(ABC):
     """
     Base class for a codec.
+
+    Attributes:
+        NAME(str): the name for this codec, used by :fun:`get_codec` and in index entries.
     """
 
     def encode(self, buf):
@@ -57,4 +60,11 @@ class Codec(ABC):
             out(bytearray):
                 the bytearray to receive the output.  This method will resize the
                 bytearray as needed to accomodate the output.
+        """
+
+    @abstractmethod
+    def config(self):
+        """
+        Get a JSON-serializable configuration for this codec.  It should be able
+        to be passed at ``**kwargs`` to the constructor.
         """

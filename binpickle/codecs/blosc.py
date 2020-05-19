@@ -21,6 +21,8 @@ def _split_blocks(buf, blocksize):
 
 
 class Blosc(Codec):
+    NAME = 'blosc'
+
     def __init__(self, name='blosclz', level=9,
                  shuffle=blosc.SHUFFLE,
                  blocksize=DEFAULT_BLOCKSIZE):
@@ -56,3 +58,10 @@ class Blosc(Codec):
             pos += n
         if len(out) > pos:
             del out[pos:]
+
+    def config(self):
+        return {
+            'name': self.name,
+            'level': self.level,
+            'shuffle': self.shuffle
+        }

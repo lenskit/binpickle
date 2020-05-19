@@ -7,6 +7,30 @@ from hypothesis.extra.numpy import arrays, integer_dtypes, floating_dtypes
 
 from binpickle.codecs import *
 
+
+def test_get_null_with_none():
+    codec = get_codec(None, {})
+    assert isinstance(codec, Null)
+
+
+def test_get_null():
+    codec = get_codec('null', {})
+    assert isinstance(codec, Null)
+
+
+def test_get_blosc():
+    codec = get_codec('blosc', {})
+    assert isinstance(codec, Blosc)
+    assert codec.level == 9
+
+
+def test_get_blosc():
+    codec = get_codec('blosc', {'name': 'zstd', 'level': 5})
+    assert isinstance(codec, Blosc)
+    assert codec.name == 'zstd'
+    assert codec.level == 5
+
+
 @pytest.mark.parametrize('codec', KNOWN_CODECS)
 @given(st.binary())
 def test_codec_roundtrip(codec, data):

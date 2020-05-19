@@ -15,3 +15,24 @@ KNOWN_CODECS = [
     Null,
     Blosc
 ]
+
+
+def get_codec(name, config):
+    """
+    Get a codec by name and configuration.
+
+    Args:
+        name(str or None): the codec name.
+        config: the codec configuration, as returned by :meth:`Codec.config`.
+
+    Returns:
+        Codec: the configured codec.
+    """
+    if name is None:
+        return Null()
+    else:
+        for c in KNOWN_CODECS:
+            if c.NAME == name:
+                return c(**config)
+
+        raise ValueError(f'unknown codec {name}')
