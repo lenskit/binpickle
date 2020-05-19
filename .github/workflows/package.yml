@@ -7,6 +7,44 @@ on:
     pull_request:
 
 jobs:
+  lint:
+    name: Check Source Style
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python ${{matrix.python}}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{matrix.python}}
+
+    - name: Install environment
+      run: |
+        pip install -U setuptools wheel
+
+    - name: Get Pip cache dir
+      id: pip-cache
+      run: |
+        echo "::set-output name=dir::$(pip cache dir)"
+      shell: bash
+
+    - name: Cache Pip wheels
+      uses: actions/cache@v1
+      with:
+        path: ${{ steps.pip-cache.outputs.dir }}
+        key: py38-lint-pip
+
+    - name: Install package
+      run: |
+        pip install -e '.[dev,test]'
+
+    - name: Run lint
+      run: |
+        flake8 --format='::error file=%(path)s,line=%(row)d,col=%(col)d::%(text)s'
+
   test:
     name: Test with Python ${{matrix.python}} on ${{matrix.platform}}
     runs-on: ${{matrix.platform}}-latest
@@ -60,7 +98,7 @@ jobs:
   sdist:
     name: Build Source Packages
     runs-on: ubuntu-latest
-    needs: test
+    needs: [test, lint]
 
     steps:
     - uses: actions/checkout@v2
