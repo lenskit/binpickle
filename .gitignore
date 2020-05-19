@@ -4,5 +4,6 @@
 /.hypothesis
 *.egg-info/
 .coverage
+coverage.xml
 *.pyc
 __pycache__
