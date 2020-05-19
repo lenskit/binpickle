@@ -178,9 +178,9 @@ jobs:
       run: |
         $ddir = (Join-Path dist ${{matrix.condaplat}})
         $bld = (Join-Path $env:CONDA conda-bld ${{matrix.condaplat}})
-        mkdir $ddir
-        gci $bld |cp -Destination $ddir
-        gci -Recurse dist
+        New-Item -Type Directory $ddir
+        Get-ChildItem $bld |Copy-Item -Destination $ddir
+        Get-ChildItem -Recurse dist
       shell: pwsh
 
     - name: Upload packages
