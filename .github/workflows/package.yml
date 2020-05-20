@@ -43,9 +43,9 @@ jobs:
 
     - name: Run lint
       run: |
-        # Flake8 problem matcher from https://github.com/TrueBrain/actions-flake8
+        # Flake8 problem matcher & transform regex from https://github.com/TrueBrain/actions-flake8
         echo "::add-matcher::.github/flake8-matcher.json"
-        flake8
+        flake8 |sed -r 's/: ([^W][0-9][0-9][0-9])/: error: \1/;s/: (W[0-9][0-9][0-9])/: warning: \1/'
         echo "::remove-matcher owner=flake8::"
 
   test:
