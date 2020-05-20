@@ -1,6 +1,7 @@
 # BinPickle - efficient binary pickled data
 
 ![Test and Build](https://github.com/lenskit/binpickle/workflows/Test%20and%20Package/badge.svg)
+[![codecov](https://codecov.io/gh/lenskit/binpickle/branch/master/graph/badge.svg)](https://codecov.io/gh/lenskit/binpickle)
 
 This package uses the new Pickle Protocol 5 in Python 3.8 (or its `pickle5` backport)
 to efficiently serialize large objects, particularly from scientific Python packages,
