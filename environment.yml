@@ -15,5 +15,6 @@ dependencies:
 - hypothesis
 - sphinx
 - flake8
+- twine
 - pip:
     - rstcheck
