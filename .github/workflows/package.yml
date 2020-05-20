@@ -43,7 +43,7 @@ jobs:
 
     - name: Run lint
       run: |
-        flake8 --format='::error file=%(path)s,line=%(row)d,col=%(col)d::%(text)s'
+        flake8 --format='::error file=%(path)s,line=%(row)d,col=%(col)d::%(code)s %(text)s'
 
   test:
     name: Test with Python ${{matrix.python}} on ${{matrix.platform}}

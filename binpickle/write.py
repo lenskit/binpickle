@@ -47,6 +47,11 @@ class BinPickler:
     Save an object into a binary pickle file.  This is like :class:`pickle.Pickler`,
     except it works on file paths instead of byte streams.
 
+    A BinPickler is also a context manager that closes itself when exited::
+
+        with BinPickler('file.bpk') as bpk:
+            bpk.dump(obj)
+
     Args:
         filename(str or pathlib.Path):
             The path to the file to write.
@@ -158,3 +163,35 @@ class BinPickler:
         self._file.seek(0)
         self._file.write(h.encode())
         self._file.flush()
+
+
+def dump(obj, file, *, mappable=False, codec=codecs.Blosc()):
+    """
+    Dump an object to a BinPickle file.  This is a convenience wrapper
+    around :class:`BinPickler`.
+
+    To save with default compression for storage or transport::
+
+        dump(obj, 'file.bpk')
+
+    To save in a file optimized for memory-mapping::
+
+        dump(obj, 'file.bpk', mappable=True)
+
+    Args:
+        obj: The object to dump.
+        file(str or pathlib.Path): The file in which to save the object.
+        mappable(bool):
+            If ``True``, save for memory-mapping.  ``codec`` is ignored
+            in this case.
+        codec(codecs.Codec):
+            The codec to use to compress the data, when not saving for
+            memory-mapping.
+    """
+
+    if mappable:
+        bpk = BinPickler(file, align=True)
+    else:
+        bpk = BinPickler(file, align=False, codec=codec)
+    with bpk:
+        bpk.dump(obj)

@@ -9,8 +9,8 @@ from hypothesis import given, assume
 import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays, scalar_dtypes
 
-from binpickle.read import BinPickleFile
-from binpickle.write import BinPickler
+from binpickle.read import BinPickleFile, load
+from binpickle.write import BinPickler, dump
 
 RW_CONFIGS = it.product(
     [BinPickler, BinPickler.mappable, BinPickler.compressed],
@@ -118,6 +118,24 @@ def test_pickle_frame(tmp_path, rng: np.random.Generator, writer, direct):
         for c in df2.columns:
             assert all(df2[c] == df[c])
         del df2
+
+
+def test_dump_frame(tmp_path, rng: np.random.Generator):
+    "Pickle a Pandas data frame"
+    file = tmp_path / 'data.bpk'
+
+    df = pd.DataFrame({
+        'key': np.arange(0, 5000),
+        'count': rng.integers(0, 1000, 5000),
+        'score': rng.normal(10, 2, 5000)
+    })
+
+    dump(df, file)
+    df2 = load(file)
+
+    assert all(df2.columns == df.columns)
+    for c in df2.columns:
+        assert all(df2[c] == df[c])
 
 
 @given(arrays(scalar_dtypes(), st.integers(500, 10000)))
