@@ -43,7 +43,10 @@ jobs:
 
     - name: Run lint
       run: |
-        flake8 --format='::error file=%(path)s,line=%(row)d,col=%(col)d::%(code)s %(text)s'
+        # Flake8 problem matcher from https://github.com/TrueBrain/actions-flake8
+        echo "::add-matcher::.github/flake8-matcher.json"
+        flake8
+        echo "::remove-matcher owner=flake8::"
 
   test:
     name: Test with Python ${{matrix.python}} on ${{matrix.platform}}
