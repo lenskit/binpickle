@@ -137,6 +137,8 @@ class BinPickler:
         _log.debug('writing %d bytes at position %d', length, offset)
         cko = CKOut(self._file)
         c_spec = self._encode_buffer(buf, cko)
+        _log.debug('encoded %d bytes to %d (%.2f%% saved)', length, cko.bytes,
+                   (length - cko.bytes) / length * 100 if length else -0.0)
 
         assert self._file.tell() == offset + cko.bytes
 
