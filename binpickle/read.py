@@ -28,10 +28,10 @@ class BinPickleFile:
     def __init__(self, filename, *, direct=False):
         self.filename = filename
         self.direct = direct
-        self._file = open(filename, 'rb')
-        self.header = FileHeader.read(self._file)
-        self._map = mmap.mmap(self._file.fileno(), self.header.length,
-                              access=mmap.ACCESS_READ)
+        with open(filename, 'rb') as bpf:
+            self.header = FileHeader.read(bpf)
+            self._map = mmap.mmap(bpf.fileno(), self.header.length,
+                                  access=mmap.ACCESS_READ)
         self._mv = memoryview(self._map)
         self._read_index()
 
@@ -93,7 +93,6 @@ class BinPickleFile:
         del self._index_buf
         del self._mv
         self._map.close()
-        self._file.close()
 
     def _read_index(self):
         tpos = self.header.trailer_pos()
