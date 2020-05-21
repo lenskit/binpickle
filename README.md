@@ -16,6 +16,11 @@ BinPickle does this by using Pickle 5's out-of-band buffer serialization support
 write buffers uncompressed and page-aligned for memory mapping (use case 1) or with
 per-buffer efficient compression with libraries like Blosc (use case 2).
 
+## Format Stability
+
+We do **not** yet guarantee the stability of the BinPickle format.  We will avoid gratuitous changes,
+but BinPickle 1.0 will be the first with a stability guarantee.
+
 ## Acknowledgements
 
 This material is based upon work supported by the National Science Foundation under
