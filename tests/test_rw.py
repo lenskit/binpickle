@@ -11,9 +11,14 @@ from hypothesis.extra.numpy import arrays, scalar_dtypes
 
 from binpickle.read import BinPickleFile, load
 from binpickle.write import BinPickler, dump
+from binpickle import codecs
+
+RW_CTORS = [BinPickler, BinPickler.mappable, BinPickler.compressed]
+if hasattr(codecs, 'Blosc'):
+    RW_CTORS.append(lambda f: BinPickler.compressed(f, codecs.Blosc('zstd', 5)))
 
 RW_CONFIGS = it.product(
-    [BinPickler, BinPickler.mappable, BinPickler.compressed],
+    RW_CTORS,
     [False, True]
 )
 RW_PARAMS = ['writer', 'direct']
