@@ -1,5 +1,5 @@
 {% set data = load_setup_py_data() %}
-{% set version = '0.1' %}
+{% set version = data.get('version') %}
 package:
   name: binpickle
   {% if environ.get('GIT_DESCRIBE_NUMBER', '0') > '0' %}
