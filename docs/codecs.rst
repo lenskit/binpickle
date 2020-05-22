@@ -29,3 +29,9 @@ Blosc codec
 ~~~~~~~~~~~
 
 .. autoclass:: Blosc
+
+
+Gzip codec
+~~~~~~~~~~
+
+.. autoclass:: GZ
