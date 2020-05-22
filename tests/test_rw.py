@@ -14,14 +14,18 @@ from binpickle.write import BinPickler, dump
 from binpickle import codecs
 
 RW_CTORS = [BinPickler, BinPickler.mappable, BinPickler.compressed]
+RW_CODECS = [st.just(None), st.builds(codecs.GZ)]
 if hasattr(codecs, 'Blosc'):
     RW_CTORS.append(lambda f: BinPickler.compressed(f, codecs.Blosc('zstd', 5)))
+    RW_CODECS.append(st.builds(codecs.Blosc))
+    RW_CODECS.append(st.builds(codecs.Blosc, st.just('zstd')))
 
 RW_CONFIGS = it.product(
     RW_CTORS,
     [False, True]
 )
 RW_PARAMS = ['writer', 'direct']
+
 
 
 @pytest.fixture
@@ -66,11 +70,12 @@ def test_write_buf(tmp_path, rng: np.random.Generator):
         del b2
 
 
-@given(st.lists(st.binary()))
-def test_write_encoded_arrays(tmp_path, arrays):
+@given(st.lists(st.binary()),
+       st.one_of(RW_CODECS))
+def test_write_encoded_arrays(tmp_path, arrays, codec):
     file = tmp_path / 'data.bpk'
 
-    with BinPickler.compressed(file) as w:
+    with BinPickler.compressed(file, codec) as w:
         for a in arrays:
             w._write_buffer(a)
         w._finish_file()
@@ -79,7 +84,8 @@ def test_write_encoded_arrays(tmp_path, arrays):
         assert not bpf.find_errors()
         assert len(bpf.entries) == len(arrays)
         for e, a in zip(bpf.entries, arrays):
-            assert e.codec
+            if codec is not None:
+                assert e.codec
             assert e.dec_length == len(a)
             dat = bpf._read_buffer(e)
             assert dat == a
