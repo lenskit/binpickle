@@ -9,12 +9,16 @@ such as splitting arrays into blocks.
 
 from ._base import Codec  # noqa: F401
 from .null import Null
-from .blosc import Blosc
 
 KNOWN_CODECS = [
-    Null,
-    Blosc
+    Null
 ]
+
+try:
+    from .blosc import Blosc
+    KNOWN_CODECS.append(Blosc)
+except ImportError:
+    pass  # blosc not available
 
 
 def get_codec(name, config):
