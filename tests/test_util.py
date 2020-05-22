@@ -4,9 +4,14 @@ import functools as ft
 
 from hypothesis import given
 import hypothesis.strategies as st
+import pytest
 
 from binpickle.write import _align_pos, CKOut
-from binpickle.codecs.blosc import _split_blocks
+
+
+def _split_blocks(*args):
+    blosc = pytest.importorskip('binpickle.codecs.blosc')
+    return blosc._split_blocks(*args)
 
 
 @given(st.integers(100, 10000000))
