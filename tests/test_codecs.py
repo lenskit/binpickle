@@ -6,6 +6,9 @@ import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays, integer_dtypes, floating_dtypes
 
 from binpickle.codecs import *
+CODEC_NAMES = set(c.NAME for c in KNOWN_CODECS)
+
+need_blosc = pytest.mark.skipif('blosc' not in CODEC_NAMES, reason='Blosc not available')
 
 
 def test_get_null_with_none():
@@ -18,13 +21,27 @@ def test_get_null():
     assert isinstance(codec, Null)
 
 
+def test_get_gz():
+    codec = get_codec('gz', {})
+    assert isinstance(codec, GZ)
+    assert codec.level == 9
+
+
+def test_get_gz_level():
+    codec = get_codec('gz', {'level': 5})
+    assert isinstance(codec, GZ)
+    assert codec.level == 5
+
+
+@need_blosc
 def test_get_blosc():
     codec = get_codec('blosc', {})
     assert isinstance(codec, Blosc)
     assert codec.level == 9
 
 
-def test_get_blosc():
+@need_blosc
+def test_get_blosc_lvl():
     codec = get_codec('blosc', {'name': 'zstd', 'level': 5})
     assert isinstance(codec, Blosc)
     assert codec.name == 'zstd'
@@ -70,6 +87,7 @@ def test_codec_decode_oversize(codec):
     assert out == data
 
 
+@need_blosc
 def test_large_blosc_encode():
     "Test encoding Blosc data that needs to be split"
     c = Blosc(blocksize=4096)
