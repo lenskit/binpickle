@@ -76,7 +76,7 @@ class BinPickler:
         return cls(filename, align=True)
 
     @classmethod
-    def compressed(cls, filename, codec=codecs.Blosc()):
+    def compressed(cls, filename, codec=codecs.GZ()):
         "Convenience method to construct a pickler for compressed storage."
         return cls(filename, codec=codec)
 
@@ -167,7 +167,7 @@ class BinPickler:
         self._file.flush()
 
 
-def dump(obj, file, *, mappable=False, codec=codecs.Blosc()):
+def dump(obj, file, *, mappable=False, codec=codecs.GZ()):
     """
     Dump an object to a BinPickle file.  This is a convenience wrapper
     around :class:`BinPickler`.

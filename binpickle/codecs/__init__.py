@@ -9,9 +9,11 @@ such as splitting arrays into blocks.
 
 from ._base import Codec  # noqa: F401
 from .null import Null
+from .gz import GZ
 
 KNOWN_CODECS = [
-    Null
+    Null,
+    GZ
 ]
 
 try:
