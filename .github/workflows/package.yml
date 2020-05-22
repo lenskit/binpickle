@@ -142,7 +142,7 @@ jobs:
   sdist:
     name: Build Source Packages
     runs-on: ubuntu-latest
-    needs: [test, lint]
+    needs: [test, lint, no-extras]
 
     steps:
     - uses: actions/checkout@v2
