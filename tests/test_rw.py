@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 import pytest
-from hypothesis import given, assume
+from hypothesis import given, assume, settings
 import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays, scalar_dtypes
 
@@ -70,6 +70,7 @@ def test_write_buf(tmp_path, rng: np.random.Generator):
         del b2
 
 
+@settings(deadline=None)
 @given(st.lists(st.binary()),
        st.one_of(RW_CODECS))
 def test_write_encoded_arrays(tmp_path, arrays, codec):
