@@ -15,7 +15,7 @@ about:
   summary: efficient binary storage of ML models
 
 source:
-  path: ../
+  path: ../..
 
 build:
   script: python -m pip install --no-deps .

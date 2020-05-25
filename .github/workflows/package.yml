@@ -216,8 +216,11 @@ jobs:
         conda update -qy --all
         conda install -qy conda-build
 
-    - name: Build Conda packages
-      run: conda build -c conda-forge conda
+    - name: Build Pickle5 packages
+      run: conda build conda/pickle5
+
+    - name: Build BinPickle packages
+      run: conda build conda/binpickle
 
     - name: Copy Conda packages
       run: |
