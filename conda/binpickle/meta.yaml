@@ -27,7 +27,7 @@ requirements:
   run:
     - python
     - python-blosc
-    - msgpack-python
+    - msgpack-python >= 1.0
     - pickle5 #[py<38]
 
 test:
