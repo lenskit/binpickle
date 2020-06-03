@@ -14,6 +14,7 @@ from binpickle.read import BinPickleFile, load
 from binpickle.write import BinPickler, dump
 from binpickle import codecs
 
+
 RW_CTORS = [BinPickler, BinPickler.mappable, BinPickler.compressed]
 RW_CODECS = [st.just(None), st.builds(codecs.GZ)]
 if codecs.Blosc.AVAILABLE:
@@ -142,6 +143,38 @@ def test_pickle_frame(tmp_path, rng: np.random.Generator, writer, direct):
         assert all(df2.columns == df.columns)
         for c in df2.columns:
             assert all(df2[c] == df[c])
+        del df2
+
+
+@pytest.mark.skipif(not codecs.NC.AVAILABLE, reason='numcodecs not available')
+def test_pickle_frame_dyncodec(tmp_path, rng: np.random.Generator):
+    file = tmp_path / 'data.bpk'
+
+    df = pd.DataFrame({
+        'key': np.arange(0, 5000, dtype='i4'),
+        'count': rng.integers(0, 1000, 5000),
+        'score': rng.normal(10, 2, 5000)
+    })
+
+    def codec(buf):
+        obj = memoryview(buf).obj
+        if isinstance(obj, np.ndarray) and obj.dtype == np.float64:
+            print('compacting double array')
+            return codecs.Chain([numcodecs.AsType('f4', 'f8'), codecs.Blosc('zstd', 9)])
+        else:
+            return codecs.Blosc('zstd', 9)
+
+    with BinPickler.compressed(file, codec) as w:
+        w.dump(df)
+
+    with BinPickleFile(file) as bpf:
+        assert not bpf.find_errors()
+        df2 = bpf.load()
+        print(df2)
+        assert all(df2.columns == df.columns)
+        assert all(df2['key'] == df['key'])
+        assert all(df2['count'] == df['count'])
+        assert all(df2['score'].astype('f4') == df['score'].astype('f4'))
         del df2
 
 
