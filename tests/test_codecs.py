@@ -1,12 +1,14 @@
 import pytest
 import numpy as np
-from numcodecs import LZ4, LZMA
 
 from hypothesis import given, assume
 import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays, integer_dtypes, floating_dtypes
 
 from binpickle.codecs import *
+if NC.AVAILABLE:
+    from numcodecs import LZ4, LZMA
+
 KNOWN_CODECS = [c for c in CODECS.values() if c.NAME != 'numcodec']  # exclude numcodec from common tests
 
 need_blosc = pytest.mark.skipif(not Blosc.AVAILABLE, reason='Blosc not available')
