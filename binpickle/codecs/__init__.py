@@ -10,9 +10,19 @@ such as splitting arrays into blocks.
 from ._base import Codec  # noqa: F401
 import logging
 
+from . import null
+from . import gz
+from . import blosc
+from . import numcodecs
+
 _log = logging.getLogger(__name__)
 
 CODECS = {}
+
+Null = null.Null
+GZ = gz.GZ
+Blosc = blosc.Blosc
+NC = numcodecs.NC
 
 
 def register(cls):
@@ -74,11 +84,7 @@ def get_codec(name, config):
         raise ValueError(f'unknown codec {name}')
 
 
-from .null import Null     # noqa: E402
 from .chain import Chain   # noqa: E402
-from .gz import GZ         # noqa: E402
-from .blosc import Blosc   # noqa: E402
-from .numcodecs import NC  # noqa: E402
 
 register(Null)
 register(Chain)
