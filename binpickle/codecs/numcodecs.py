@@ -33,7 +33,7 @@ class NC(Codec):
         w.write(self.encode(buf))
 
     def decode(self, buf):
-        return self.codec.decode(buf)
+        return memoryview(self.codec.decode(buf))
 
     def decode_to(self, buf, out):
         out[:] = self.decode(buf)

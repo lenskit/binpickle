@@ -147,6 +147,30 @@ def test_numcodec_roundtrip(data):
     assert d2 == data
 
 
+@given(st.binary())
+def test_chain(data):
+    # Useless but a test
+    codec = Chain([LZMA(), GZ()])
+    buf = codec.encode(data)
+    d2 = codec.decode(buf)
+
+    assert len(d2) == len(data)
+    assert d2 == data
+
+
+def test_chain_config():
+    codec = Chain([LZMA(), GZ()])
+    assert len(codec.codecs) == 2
+    assert isinstance(codec.codecs[0], NC)
+    assert isinstance(codec.codecs[1], GZ)
+
+    cfg = codec.config()
+    c2 = get_codec(Chain.NAME, cfg)
+    assert len(codec.codecs) == 2
+    assert isinstance(codec.codecs[0], NC)
+    assert isinstance(codec.codecs[1], GZ)
+
+
 def test_is_not_numcodec():
     assert not numcodecs.is_numcodec(GZ())
 

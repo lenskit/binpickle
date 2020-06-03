@@ -24,6 +24,8 @@ if codecs.NC.AVAILABLE:
     import numcodecs
     RW_CTORS.append(lambda f: BinPickler.compressed(f, numcodecs.LZMA()))
     RW_CODECS.append(st.builds(codecs.NC, st.just(numcodecs.LZMA())))
+    # also build a chain test
+    RW_CTORS.append(lambda f: BinPickler.compressed(f, codecs.Chain([numcodecs.MsgPack(), codecs.GZ()])))
 
 RW_CONFIGS = it.product(
     RW_CTORS,

@@ -8,10 +8,9 @@ such as splitting arrays into blocks.
 """
 
 from ._base import Codec  # noqa: F401
-from .null import Null
-from .gz import GZ
-from .blosc import Blosc
-from .numcodecs import NC
+import logging
+
+_log = logging.getLogger(__name__)
 
 CODECS = {}
 
@@ -20,15 +19,7 @@ def register(cls):
     CODECS[cls.NAME] = cls
 
 
-register(Null)
-register(GZ)
-if Blosc.AVAILABLE:
-    register(Blosc)
-if NC.AVAILABLE:
-    register(NC)
-
-
-def make_codec(codec, *, null_as_none=False):
+def make_codec(codec, *, null_as_none=False, list_is_tuple=False):
     """
     Resolve a codec into a BinPickle-compatible codec.
 
@@ -39,6 +30,8 @@ def make_codec(codec, *, null_as_none=False):
             * ``None`` (returns :class:`Null`)
             * A :class:`Codec` object (returned as-is)
             * A string (look up codec by name and return with default options)
+            * A tuple ``(name, config)`` (pass to :func:`get_config`)
+            * A list (wrapped in :class:`Chain`)
             * A :class:`numcodecs.abc.Codec` (wrapped in :class:`NC` and returned)
 
     Returns:
@@ -48,6 +41,11 @@ def make_codec(codec, *, null_as_none=False):
         return Null()
     elif isinstance(codec, str):
         return CODECS[codec]()
+    elif isinstance(codec, tuple) or (list_is_tuple and isinstance(codec, list)):
+        name, config = codec
+        return get_codec(name, config)
+    elif isinstance(codec, list):
+        return Chain(codec)
     elif numcodecs.is_numcodec(codec):
         return NC(codec)
     elif isinstance(codec, Null) and null_as_none:
@@ -70,6 +68,22 @@ def get_codec(name, config):
     if name is None:
         return Null()
     elif name in CODECS:
+        _log.debug('configuring %s: %s', name, config)
         return CODECS[name](**config)
     else:
         raise ValueError(f'unknown codec {name}')
+
+
+from .null import Null     # noqa: E402
+from .chain import Chain   # noqa: E402
+from .gz import GZ         # noqa: E402
+from .blosc import Blosc   # noqa: E402
+from .numcodecs import NC  # noqa: E402
+
+register(Null)
+register(Chain)
+register(GZ)
+if Blosc.AVAILABLE:
+    register(Blosc)
+if NC.AVAILABLE:
+    register(NC)
