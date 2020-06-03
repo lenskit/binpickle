@@ -26,6 +26,10 @@ Null codec
 
 .. autoclass:: Null
 
+Chain codec
+~~~~~~~~~~~
+
+.. autoclass:: Chain
 
 Blosc codec
 ~~~~~~~~~~~
