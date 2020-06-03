@@ -66,7 +66,7 @@ class BinPickler:
         self.align = align
         self._file = open(filename, 'wb')
         self.entries = []
-        self.codec = codec
+        self.codec = codecs.make_codec(codec, null_as_none=True)
 
         self._init_header()
 

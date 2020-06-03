@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+from numcodecs import LZ4, LZMA
 
 from hypothesis import given, assume
 import hypothesis.strategies as st
@@ -9,8 +10,38 @@ from binpickle.codecs import *
 KNOWN_CODECS = [c for c in CODECS.values() if c.NAME != 'numcodec']  # exclude numcodec from common tests
 
 need_blosc = pytest.mark.skipif(not Blosc.AVAILABLE, reason='Blosc not available')
+need_numcodecs = pytest.mark.skipif(not NC.AVAILABLE, reason='numcodecs not available')
 
-need_blosc = pytest.mark.skipif('blosc' not in CODEC_NAMES, reason='Blosc not available')
+
+def test_make_codec_none():
+    assert isinstance(make_codec(None), Null)
+
+
+def test_make_codec_null_str():
+    assert isinstance(make_codec('null'), Null)
+
+
+def test_make_codec_gz_str():
+    assert isinstance(make_codec('gz'), GZ)
+
+
+def test_make_codec_return():
+    codec = GZ()
+    assert make_codec(codec) is codec
+
+
+@need_numcodecs
+def test_make_codec_wrap():
+    inner = LZ4()
+    codec = make_codec(inner)
+    assert isinstance(codec, NC)
+    assert codec.codec is inner
+
+
+def test_make_codec_to_none():
+    "Test internal-use none codec"
+    assert make_codec(None, null_as_none=True) is None
+    assert make_codec(Null(), null_as_none=True) is None
 
 
 def test_get_null_with_none():
@@ -104,3 +135,21 @@ def test_large_blosc_encode():
     a2 = np.frombuffer(data)
     assert len(a2) == len(data)
     assert all(a2 == data)
+
+
+@need_numcodecs
+@given(st.binary())
+def test_numcodec_roundtrip(data):
+    c = NC(LZMA())
+    buf = c.encode(data)
+    d2 = c.decode(buf)
+    assert len(d2) == len(data)
+    assert d2 == data
+
+
+def test_is_not_numcodec():
+    assert not numcodecs.is_numcodec(GZ())
+
+@need_numcodecs
+def test_is_numcodec():
+    assert numcodecs.is_numcodec(LZ4())
