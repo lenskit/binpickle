@@ -84,6 +84,7 @@ def test_get_blosc_lvl():
 
 
 @pytest.mark.parametrize('codec', KNOWN_CODECS)
+@settings(deadline=500)
 @given(st.binary())
 def test_codec_roundtrip(codec, data):
     "Round-trip a codec"
