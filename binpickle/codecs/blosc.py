@@ -1,9 +1,11 @@
+import logging
 import blosc
 import msgpack
 
 from ._base import Codec
 
 DEFAULT_BLOCKSIZE = 1024 * 1024 * 1024
+_log = logging.getLogger(__name__)
 
 
 def _split_blocks(buf, blocksize):
@@ -40,6 +42,8 @@ class Blosc(Codec):
         pack = msgpack.Packer()
         mv = memoryview(buf)
         blocks = _split_blocks(mv, self.blocksize)
+        _log.debug('compressing %d bytes in %d blocks (itemsize=%d)',
+                   mv.nbytes, len(blocks), mv.itemsize)
         out.write(pack.pack_array_header(len(blocks)))
         for block in blocks:
             comp = blosc.compress(block, cname=self.name, clevel=self.level,
