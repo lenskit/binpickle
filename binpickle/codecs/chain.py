@@ -1,5 +1,5 @@
 from ._base import Codec
-from . import make_codec, _log
+from . import make_codec
 
 
 class Chain(Codec):

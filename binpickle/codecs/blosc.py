@@ -1,4 +1,3 @@
-import sys
 import logging
 import msgpack
 from importlib.util import find_spec

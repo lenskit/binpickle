@@ -128,7 +128,6 @@ class BinPickler:
         codec.encode_to(buf, out)
         return (codec.NAME, codec.config())
 
-
     def _write_buffer(self, buf):
         mv = memoryview(buf)
         offset = self._file.tell()
