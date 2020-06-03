@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 
-from hypothesis import given, assume
+from hypothesis import given, assume, settings
 import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays, integer_dtypes, floating_dtypes
 
@@ -96,6 +96,7 @@ def test_codec_roundtrip(codec, data):
 
 
 @pytest.mark.parametrize('codec', KNOWN_CODECS)
+@settings(deadline=500)
 @given(arrays(st.one_of(integer_dtypes(), floating_dtypes()),
               st.integers(10, 10000)))
 def test_codec_roundtrip_array(codec, data):
