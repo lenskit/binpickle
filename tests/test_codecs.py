@@ -6,7 +6,9 @@ import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays, integer_dtypes, floating_dtypes
 
 from binpickle.codecs import *
-CODEC_NAMES = set(c.NAME for c in KNOWN_CODECS)
+KNOWN_CODECS = [c for c in CODECS.values() if c.NAME != 'numcodec']  # exclude numcodec from common tests
+
+need_blosc = pytest.mark.skipif(not Blosc.AVAILABLE, reason='Blosc not available')
 
 need_blosc = pytest.mark.skipif('blosc' not in CODEC_NAMES, reason='Blosc not available')
 

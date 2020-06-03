@@ -1,8 +1,10 @@
+import sys
 import logging
-import blosc
 import msgpack
+from importlib.util import find_spec
 
 from ._base import Codec
+
 
 DEFAULT_BLOCKSIZE = 1024 * 1024 * 1024
 _log = logging.getLogger(__name__)
@@ -28,10 +30,12 @@ class Blosc(Codec):
     """
 
     NAME = 'blosc'
+    AVAILABLE = find_spec('blosc') is not None
 
     def __init__(self, name='blosclz', level=9,
-                 shuffle=blosc.SHUFFLE,
-                 blocksize=DEFAULT_BLOCKSIZE):
+                 shuffle=1, blocksize=DEFAULT_BLOCKSIZE):
+        if not self.AVAILABLE:
+            raise ImportError('blosc is not available')
         self.name = name
         self.level = level
         self.shuffle = shuffle
@@ -39,6 +43,7 @@ class Blosc(Codec):
 
     def encode_to(self, buf, out):
         # We have to encode by chunks
+        import blosc
         pack = msgpack.Packer()
         mv = memoryview(buf)
         blocks = _split_blocks(mv, self.blocksize)
@@ -52,6 +57,7 @@ class Blosc(Codec):
             block.release()
 
     def decode_to(self, buf, out):
+        import blosc
         blocks = msgpack.unpackb(buf, use_list=True)
         pos = 0
         for block in blocks:

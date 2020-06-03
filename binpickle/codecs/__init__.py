@@ -10,11 +10,19 @@ such as splitting arrays into blocks.
 from ._base import Codec  # noqa: F401
 from .null import Null
 from .gz import GZ
+from .blosc import Blosc
 
-KNOWN_CODECS = [
-    Null,
-    GZ
-]
+CODECS = {}
+
+
+def register(cls):
+    CODECS[cls.NAME] = cls
+
+
+register(Null)
+register(GZ)
+if Blosc.AVAILABLE:
+    register(Blosc)
 
 try:
     from .blosc import Blosc
@@ -25,7 +33,7 @@ except ImportError:
 
 def get_codec(name, config):
     """
-    Get a codec by name and configuration.
+    Get a codec by name and configuration (as stored in the BinPickle manifest).
 
     Args:
         name(str or None): the codec name.
@@ -36,9 +44,7 @@ def get_codec(name, config):
     """
     if name is None:
         return Null()
+    elif name in CODECS:
+        return CODECS[name](**config)
     else:
-        for c in KNOWN_CODECS:
-            if c.NAME == name:
-                return c(**config)
-
         raise ValueError(f'unknown codec {name}')
