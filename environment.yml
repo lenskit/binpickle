@@ -8,6 +8,7 @@ dependencies:
 - pip
 - msgpack-python
 - python-blosc
+- numcodecs
 - numpy>=1.17
 - pandas>=1.0
 - pytest

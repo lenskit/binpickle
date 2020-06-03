@@ -11,6 +11,8 @@ such as splitting arrays into blocks and can reduce copying in some situations.
 
 .. toctree::
 
+.. autofunction:: make_codec
+
 Codec API
 ---------
 
@@ -24,6 +26,10 @@ Null codec
 
 .. autoclass:: Null
 
+Chain codec
+~~~~~~~~~~~
+
+.. autoclass:: Chain
 
 Blosc codec
 ~~~~~~~~~~~
@@ -35,3 +41,12 @@ Gzip codec
 ~~~~~~~~~~
 
 .. autoclass:: GZ
+
+
+NumCodecs
+~~~~~~~~~
+
+BinPickle also supports any codec from numcodecs_ through the :class:`NC` wrapper.  This
+is automatically used by the :func:`make_codec` function, so you can also pass a NumCodecs
+codec directly to :meth:`binpickle.BinPickler.compressed`.
+

@@ -92,7 +92,7 @@ jobs:
 
     - name: Install package
       run: |
-        pip install -e '.[dev,test,blosc]'
+        pip install -e '.[dev,test,blosc,numcodecs]'
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests

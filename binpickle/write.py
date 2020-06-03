@@ -57,8 +57,11 @@ class BinPickler:
             The path to the file to write.
         align(bool):
             If ``True``, align buffers to the page size.
-        codec(binpickle.codecs.Codec or None):
-            The codec to use for encoding buffers.
+        codec:
+            The codec to use for encoding buffers.  This can be anything that can be
+            passed to :func:`binpickle.codecs.make_codec`, or it can be a function
+            that takes a buffer and returns the codec to use for that buffer (to
+            use different codecs for different types or sizes of buffers).
     """
 
     def __init__(self, filename, *, align=False, codec=None):
@@ -115,9 +118,15 @@ class BinPickler:
         if self.codec is None:
             out.write(buf)
             return None
+        elif hasattr(self.codec, '__call__'):
+            # codec is callable, call it to get the codec
+            codec = self.codec(buf)
+            codec = codecs.make_codec(codec)
         else:
-            self.codec.encode_to(buf, out)
-            return (self.codec.NAME, self.codec.config())
+            codec = codecs.make_codec(self.codec)
+
+        codec.encode_to(buf, out)
+        return (codec.NAME, codec.config())
 
     def _write_buffer(self, buf):
         mv = memoryview(buf)
@@ -139,6 +148,7 @@ class BinPickler:
         c_spec = self._encode_buffer(buf, cko)
         _log.debug('encoded %d bytes to %d (%.2f%% saved)', length, cko.bytes,
                    (length - cko.bytes) / length * 100 if length else -0.0)
+        _log.debug('used codec %s', c_spec)
 
         assert self._file.tell() == offset + cko.bytes
 

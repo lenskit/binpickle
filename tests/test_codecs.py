@@ -1,14 +1,49 @@
 import pytest
 import numpy as np
 
-from hypothesis import given, assume
+from hypothesis import given, assume, settings
 import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays, integer_dtypes, floating_dtypes
 
 from binpickle.codecs import *
-CODEC_NAMES = set(c.NAME for c in KNOWN_CODECS)
+if NC.AVAILABLE:
+    from numcodecs import LZ4, LZMA
 
-need_blosc = pytest.mark.skipif('blosc' not in CODEC_NAMES, reason='Blosc not available')
+KNOWN_CODECS = [c for c in CODECS.values() if c.NAME != 'numcodec']  # exclude numcodec from common tests
+
+need_blosc = pytest.mark.skipif(not Blosc.AVAILABLE, reason='Blosc not available')
+need_numcodecs = pytest.mark.skipif(not NC.AVAILABLE, reason='numcodecs not available')
+
+
+def test_make_codec_none():
+    assert isinstance(make_codec(None), Null)
+
+
+def test_make_codec_null_str():
+    assert isinstance(make_codec('null'), Null)
+
+
+def test_make_codec_gz_str():
+    assert isinstance(make_codec('gz'), GZ)
+
+
+def test_make_codec_return():
+    codec = GZ()
+    assert make_codec(codec) is codec
+
+
+@need_numcodecs
+def test_make_codec_wrap():
+    inner = LZ4()
+    codec = make_codec(inner)
+    assert isinstance(codec, NC)
+    assert codec.codec is inner
+
+
+def test_make_codec_to_none():
+    "Test internal-use none codec"
+    assert make_codec(None, null_as_none=True) is None
+    assert make_codec(Null(), null_as_none=True) is None
 
 
 def test_get_null_with_none():
@@ -49,6 +84,7 @@ def test_get_blosc_lvl():
 
 
 @pytest.mark.parametrize('codec', KNOWN_CODECS)
+@settings(deadline=500)
 @given(st.binary())
 def test_codec_roundtrip(codec, data):
     "Round-trip a codec"
@@ -61,6 +97,7 @@ def test_codec_roundtrip(codec, data):
 
 
 @pytest.mark.parametrize('codec', KNOWN_CODECS)
+@settings(deadline=500)
 @given(arrays(st.one_of(integer_dtypes(), floating_dtypes()),
               st.integers(10, 10000)))
 def test_codec_roundtrip_array(codec, data):
@@ -102,3 +139,47 @@ def test_large_blosc_encode():
     a2 = np.frombuffer(data)
     assert len(a2) == len(data)
     assert all(a2 == data)
+
+
+@need_numcodecs
+@given(st.binary())
+def test_numcodec_roundtrip(data):
+    c = NC(LZMA())
+    buf = c.encode(data)
+    d2 = c.decode(buf)
+    assert len(d2) == len(data)
+    assert d2 == data
+
+
+@need_numcodecs
+@given(st.binary())
+def test_chain(data):
+    # Useless but a test
+    codec = Chain([LZMA(), GZ()])
+    buf = codec.encode(data)
+    d2 = codec.decode(buf)
+
+    assert len(d2) == len(data)
+    assert d2 == data
+
+
+@need_numcodecs
+def test_chain_config():
+    codec = Chain([LZMA(), GZ()])
+    assert len(codec.codecs) == 2
+    assert isinstance(codec.codecs[0], NC)
+    assert isinstance(codec.codecs[1], GZ)
+
+    cfg = codec.config()
+    c2 = get_codec(Chain.NAME, cfg)
+    assert len(codec.codecs) == 2
+    assert isinstance(codec.codecs[0], NC)
+    assert isinstance(codec.codecs[1], GZ)
+
+
+def test_is_not_numcodec():
+    assert not numcodecs.is_numcodec(GZ())
+
+@need_numcodecs
+def test_is_numcodec():
+    assert numcodecs.is_numcodec(LZ4())
