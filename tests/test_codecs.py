@@ -149,6 +149,7 @@ def test_numcodec_roundtrip(data):
     assert d2 == data
 
 
+@need_numcodecs
 @given(st.binary())
 def test_chain(data):
     # Useless but a test
@@ -160,6 +161,7 @@ def test_chain(data):
     assert d2 == data
 
 
+@need_numcodecs
 def test_chain_config():
     codec = Chain([LZMA(), GZ()])
     assert len(codec.codecs) == 2
