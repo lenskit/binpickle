@@ -3,6 +3,7 @@
 /dist
 /.hypothesis
 *.egg-info/
+*.dist-info/
 .coverage
 coverage.xml
 *.pyc

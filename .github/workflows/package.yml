@@ -26,9 +26,10 @@ jobs:
       run: |
         pip install -U setuptools wheel
 
-    - name: Get Pip cache dir
+    - name: Prep Pip caching
       id: pip-cache
       run: |
+        python setup.py egg_info
         echo "::set-output name=dir::$(pip cache dir)"
       shell: bash
 
@@ -36,7 +37,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
-        key: py38-lint-pip
+        key: py38-lint-pip-${{ hashFiles('*.egg-info/requires.txt')}}
 
     - name: Install package
       run: |
@@ -78,9 +79,10 @@ jobs:
       run: |
         pip install -U setuptools wheel
 
-    - name: Get Pip cache dir
+    - name: Prep Pip cache
       id: pip-cache
       run: |
+        python setup.py egg_info
         echo "::set-output name=dir::$(pip cache dir)"
       shell: bash
 
@@ -88,7 +90,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
-        key: ${{ matrix.platform }}-py${{ matrix.python }}-pip
+        key: ${{ matrix.platform }}-py${{ matrix.python }}-pip-${{ hashFiles('*.egg-info/requires.txt')}}
 
     - name: Install package
       run: |
@@ -121,6 +123,7 @@ jobs:
     - name: Get Pip cache dir
       id: pip-cache
       run: |
+        python setup.py egg_info
         echo "::set-output name=dir::$(pip cache dir)"
       shell: bash
 
@@ -128,7 +131,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
-        key: no-extras-pip
+        key: no-extras-pip-${{ hashFiles('*.egg-info/requires.txt')}}
 
     - name: Install package
       run: |
