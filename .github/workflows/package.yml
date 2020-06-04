@@ -231,7 +231,7 @@ jobs:
       if: steps.p5-status.outputs.up_to_date != 'true'
 
     - name: Build BinPickle packages
-      run: conda build conda/binpickle
+      run: conda build -c lenskit conda/binpickle
 
     - name: Copy Conda packages
       run: |
