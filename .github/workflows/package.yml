@@ -225,7 +225,7 @@ jobs:
 
     - name: Build Pickle5 packages
       run: conda build conda/pickle5
-      if: steps.p5-status.outputs.up_to_date != true
+      if: steps.p5-status.outputs.up_to_date != 'true'
 
     - name: Build BinPickle packages
       run: conda build conda/binpickle
