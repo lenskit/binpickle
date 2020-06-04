@@ -215,6 +215,7 @@ def test_compress_many_arrays(tmp_path, a):
             assert all(a2 == a)
 
 
+@settings(deadline=500)
 @given(arrays(scalar_dtypes(), st.integers(500, 10000)))
 def test_map_many_arrays(a):
     "Pickle random NumPy arrays"
