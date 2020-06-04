@@ -216,8 +216,16 @@ jobs:
         conda update -qy --all
         conda install -qy conda-build
 
+    - name: Check Pickle5 status
+      id: p5-status
+      shell: pwsh
+      run: |
+        cd conda
+        & ./check-pickle5.ps1
+
     - name: Build Pickle5 packages
       run: conda build conda/pickle5
+      if: steps.p5-status.outputs.up_to_date != true
 
     - name: Build BinPickle packages
       run: conda build conda/binpickle
