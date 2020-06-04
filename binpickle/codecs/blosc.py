@@ -10,6 +10,8 @@ _log = logging.getLogger(__name__)
 
 
 def _split_blocks(buf, blocksize):
+    if buf.itemsize > 1:
+        buf = buf.cast('B')
     length = buf.nbytes
     chunks = []
     for start in range(0, length, blocksize):
@@ -45,11 +47,13 @@ class Blosc(Codec):
         import blosc
         pack = msgpack.Packer()
         mv = memoryview(buf)
+        _log.debug('encoding %d bytes (itemsize=%d, format=%s)',
+                   mv.nbytes, mv.itemsize, mv.format)
+        _log.debug('splitting with block size %d', self.blocksize)
         blocks = _split_blocks(mv, self.blocksize)
-        _log.debug('compressing %d bytes in %d blocks (itemsize=%d)',
-                   mv.nbytes, len(blocks), mv.itemsize)
         out.write(pack.pack_array_header(len(blocks)))
         for block in blocks:
+            assert block.nbytes <= self.blocksize
             comp = blosc.compress(block, cname=self.name, clevel=self.level,
                                   shuffle=self.shuffle, typesize=mv.itemsize)
             out.write(pack.pack(comp))
