@@ -298,7 +298,9 @@ jobs:
         run: |
           source $CONDA/etc/profile.d/conda.sh
           conda activate base
-          anaconda upload -u lenskit --skip-existing dist/*/pickle5*.tar.bz2
+          if ls dist/*/pickle5.tar.bz2; then
+            anaconda upload -u lenskit --skip-existing dist/*/pickle5*.tar.bz2
+          fi
           anaconda upload -u lenskit dist/*/binpickle*.tar.bz2
         shell: bash
         env:
