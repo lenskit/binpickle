@@ -90,9 +90,11 @@ class BinPickleFile:
         Close the BinPickle file.  If the file is in direct mode, all
         retrieved objects and associated views must first be deleted.
         """
-        del self._index_buf
-        del self._mv
-        self._map.close()
+        self._index_buf = None
+        self._mv = None
+        if self._map is not None:
+            self._map.close()
+            self._map = None
 
     def _read_index(self):
         tpos = self.header.trailer_pos()
