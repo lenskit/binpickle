@@ -17,5 +17,7 @@ dependencies:
 - sphinx
 - flake8
 - twine
+- docopt
 - pip:
     - rstcheck
+    - natural
