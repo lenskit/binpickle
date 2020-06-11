@@ -4,6 +4,7 @@ Constants and functions defining the binpickle format.
 
 import struct
 from typing import NamedTuple
+import msgpack
 
 MAGIC = b'BPCK'
 VERSION = 1
@@ -85,7 +86,8 @@ class FileTrailer(NamedTuple):
 
 class IndexEntry(NamedTuple):
     """
-    Index entry for a buffer in the BinPickle index.
+    Index entry for a buffer in the BinPickle index.  In the BinPickle file,
+    these are saved in MsgPack format in the file index.
     """
     offset: int
     "The position in the file where the buffer begins (bytes)."
@@ -95,6 +97,11 @@ class IndexEntry(NamedTuple):
     "The decoded length of the buffer in bytes."
     checksum: int
     "The Adler-32 checksum of the encoded buffer data."
+    content_hash: bytes or None = None
+    """
+    The MD5 checksum of the *decoded* buffer data.  In a V1 BinPickle file,
+    this will be empty.
+    """
     codec: tuple = None
     "The codec used to encode the buffer, or None."
 
@@ -108,3 +115,36 @@ class IndexEntry(NamedTuple):
         if not isinstance(repr, dict):
             raise TypeError("IndexEntry representation must be a dict")
         return cls(**repr)
+
+
+class FileIndex:
+    """
+    Index of a BinPickle file.  This is stored in MsgPack format in the
+    BinPickle file.
+    """
+    def __init__(self, entries=None):
+        self._entries = entries if entries is not None else []
+
+    @property
+    def buffers(self):
+        """
+        Return the buffer entries in order.
+        """
+        return self._entries
+
+    def add_entry(self, entry: IndexEntry):
+        self._entries.append(entry)
+
+    def pack(self, version=1):
+        return msgpack.packb([b.to_repr() for b in self._entries])
+
+    @classmethod
+    def unpack(cls, index, version=1):
+        unpacked = msgpack.unpackb(index)
+        if isinstance(unpacked, list):
+            return cls([IndexEntry.from_repr(r) for r in unpacked])
+        else:
+            raise ValueError('unknown index format')
+
+    def __len__(self):
+        return len(self._entries)

@@ -51,7 +51,7 @@ def test_empty(tmp_path):
     assert file.stat().st_size == 33
 
     with BinPickleFile(file) as bpf:
-        assert len(bpf.entries) == 0
+        assert len(bpf.index) == 0
 
 
 def test_write_buf(tmp_path, rng: np.random.Generator):
@@ -65,8 +65,8 @@ def test_write_buf(tmp_path, rng: np.random.Generator):
         w._finish_file()
 
     with BinPickleFile(file, direct=True) as bpf:
-        assert len(bpf.entries) == 1
-        e = bpf.entries[0]
+        assert len(bpf.index) == 1
+        e = bpf.index.buffers[0]
         assert e.dec_length == a.nbytes
         assert e.enc_length == a.nbytes
         b2 = bpf._read_buffer(e)
@@ -116,7 +116,7 @@ def test_pickle_array(tmp_path, rng: np.random.Generator):
         w.dump(a)
 
     with BinPickleFile(file) as bpf:
-        assert len(bpf.entries) == 2
+        assert len(bpf.index) == 2
         a2 = bpf.load()
         assert len(a2) == len(a)
         assert all(a2 == a)
@@ -209,7 +209,7 @@ def test_compress_many_arrays(tmp_path, a):
 
         with BinPickleFile(file) as bpf:
             assert not bpf.find_errors()
-            assert len(bpf.entries) in (1, 2)
+            assert len(bpf.index) in (1, 2)
             a2 = bpf.load()
             assert len(a2) == len(a)
             assert all(a2 == a)
@@ -228,7 +228,7 @@ def test_map_many_arrays(a):
 
         with BinPickleFile(file, direct=True) as bpf:
             assert not bpf.find_errors()
-            assert len(bpf.entries) in (1, 2)
+            assert len(bpf.index) in (1, 2)
             a2 = bpf.load()
             assert len(a2) == len(a)
             assert all(a2 == a)

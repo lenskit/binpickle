@@ -52,3 +52,8 @@ def test_catch_bad_padding():
     assert 'padding' in str(exc.value)
 
 
+def test_index_empty():
+    index = FileIndex()
+    assert len(index) == 0
+    assert len(index.buffers) == 0
+    assert len(index.pack()) == 1

@@ -6,7 +6,7 @@ from zlib import adler32
 import msgpack
 
 from .compat import pickle
-from .format import FileHeader, FileTrailer, IndexEntry
+from .format import FileHeader, FileTrailer, IndexEntry, FileIndex
 from . import codecs
 
 _log = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class BinPickler:
         self.filename = filename
         self.align = align
         self._file = open(filename, 'wb')
-        self.entries = []
+        self.index = FileIndex()
         self.codec = codec
 
         self._init_header()
@@ -90,7 +90,7 @@ class BinPickler:
                             buffer_callback=self._write_buffer)
         pk.dump(obj)
         buf = bio.getbuffer()
-        _log.info('pickled %d bytes with %d buffers', buf.nbytes, len(self.entries))
+        _log.info('pickled %d bytes with %d buffers', buf.nbytes, len(self.index))
         self._write_buffer(buf)
         self._finish_file()
 
@@ -152,15 +152,15 @@ class BinPickler:
 
         assert self._file.tell() == offset + cko.bytes
 
-        self.entries.append(IndexEntry(offset, cko.bytes, length, cko.checksum,
-                                       c_spec))
+        self.index.add_entry(IndexEntry(offset, cko.bytes, length, cko.checksum,
+                                        codec=c_spec))
 
     def _write_index(self):
-        buf = msgpack.packb([e.to_repr() for e in self.entries])
+        buf = self.index.pack()
         pos = self._file.tell()
         nbs = len(buf)
         _log.debug('writing %d index entries (%d bytes) at position %d',
-                   len(self.entries), nbs, pos)
+                   len(self.index), nbs, pos)
         self._file.write(buf)
         ft = FileTrailer(pos, nbs, adler32(buf))
         self._file.write(ft.encode())
