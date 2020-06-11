@@ -75,13 +75,13 @@ class BinPickleFile:
         for i, e in enumerate(self.entries):
             if e.offset < position:
                 errors.append(f'entry {i}: offset {e.offset} before expected start {position}')
+            cks = adler32(self._read_buffer(e, direct=True, decode=False))
+            if cks != e.checksum:
+                errors.append('entry {i}: invalid checksum ({cks} != {e.checksum}')
             buf = self._read_buffer(e, direct=True)
             ndec = len(buf)
             if ndec != e.dec_length:
                 errors.append(f'entry {i}: decoded to {ndec} bytes, expected {e.dec_length}')
-            cks = adler32(self._read_buffer(e, direct=True, decode=False))
-            if cks != e.checksum:
-                errors.append('entry {i}: invalid checksum ({cks} != {e.checksum}')
 
         return errors
 
