@@ -2,11 +2,12 @@ import mmap
 import warnings
 import logging
 import io
+import hashlib
 from zlib import adler32
 import msgpack
 
 from .compat import pickle
-from .format import FileHeader, FileTrailer, IndexEntry, FileIndex
+from .format import FileHeader, FileTrailer, IndexEntry, FileIndex, DEFAULT_VERSION
 from . import codecs
 
 _log = logging.getLogger(__name__)
@@ -64,12 +65,14 @@ class BinPickler:
             use different codecs for different types or sizes of buffers).
     """
 
-    def __init__(self, filename, *, align=False, codec=None):
+    def __init__(self, filename, *, align=False, codec=None, version=DEFAULT_VERSION):
         self.filename = filename
         self.align = align
         self._file = open(filename, 'wb')
-        self.index = FileIndex()
+        self.index = FileIndex(version=version)
         self.codec = codec
+        self.deduplicate = version >= 2
+        self.buffers_written = set()
 
         self._init_header()
 
@@ -131,6 +134,16 @@ class BinPickler:
     def _write_buffer(self, buf):
         mv = memoryview(buf)
         offset = self._file.tell()
+        if self.deduplicate:
+            sha1 = hashlib.sha1(mv).digest()
+            if sha1 in self.buffers_written:
+                _log.debug('repeated buffer hash %s', sha1)
+                self.index.add_entry(sha1, None)
+                return
+            else:
+                self.buffers_written.add(sha1)
+        else:
+            sha1 = None
 
         if self.align:
             off2 = _align_pos(offset)
@@ -152,8 +165,8 @@ class BinPickler:
 
         assert self._file.tell() == offset + cko.bytes
 
-        self.index.add_entry(IndexEntry(offset, cko.bytes, length, cko.checksum,
-                                        codec=c_spec))
+        self.index.add_entry(sha1, IndexEntry(offset, cko.bytes, length,
+                                              cko.checksum, sha1, c_spec))
 
     def _write_index(self):
         buf = self.index.pack()

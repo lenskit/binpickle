@@ -7,7 +7,9 @@ from typing import NamedTuple
 import msgpack
 
 MAGIC = b'BPCK'
-VERSION = 1
+MIN_VERSION = 1
+DEFAULT_VERSION = 2
+MAX_VERSION = 2
 HEADER_FORMAT = struct.Struct('!4sHHq')
 TRAILER_FORMAT = struct.Struct('!QLL')
 
@@ -17,12 +19,12 @@ class FileHeader(NamedTuple):
     File header for a BinPickle file.  The header is a 16-byte sequence containing the
     magic (``BPCK``) followed by version and offset information:
 
-    1. File version (2 bytes, big-endian). Currently only version 1 exists.
+    1. File version (2 bytes, big-endian). Currently only versions 1 and 2 exist.
     2. Reserved (2 bytes). Set to 0.
     3. File length (8 bytes, big-endian).  Length is signed; if the file length is not known,
        this field is set to -1.
     """
-    version: int = VERSION
+    version: int = DEFAULT_VERSION
     "The NumPy file version."
     length: int = -1
     "The length of the file (-1 for unknown)."
@@ -37,7 +39,7 @@ class FileHeader(NamedTuple):
         m, v, pad, off = HEADER_FORMAT.unpack(buf)
         if verify and m != MAGIC:
             raise ValueError('invalid magic {}'.format(m))
-        if verify and v != VERSION:
+        if verify and (v > MAX_VERSION or v < MIN_VERSION):
             raise ValueError('invalid version {}'.format(v))
         if verify and pad != 0:
             raise ValueError('invalid padding')
@@ -99,7 +101,7 @@ class IndexEntry(NamedTuple):
     "The Adler-32 checksum of the encoded buffer data."
     content_hash: bytes or None = None
     """
-    The MD5 checksum of the *decoded* buffer data.  In a V1 BinPickle file,
+    The SHA1 checksum of the *decoded* buffer data.  In a V1 BinPickle file,
     this will be empty.
     """
     codec: tuple = None
@@ -122,7 +124,37 @@ class FileIndex:
     Index of a BinPickle file.  This is stored in MsgPack format in the
     BinPickle file.
     """
-    def __init__(self, entries=None):
+    def __new__(cls, *args, version=DEFAULT_VERSION, **kwargs):
+        if version == 1:
+            return super().__new__(FileIndexV1)
+        elif version == 2:
+            return super().__new__(FileIndexV2)
+        else:
+            raise ValueError(f'unknown version {version}')
+
+    @classmethod
+    def unpack(cls, index, version=DEFAULT_VERSION):
+        unpacked = msgpack.unpackb(index)
+        if isinstance(unpacked, list):
+            return FileIndexV1([IndexEntry.from_repr(r) for r in unpacked], version=1)
+        elif isinstance(unpacked, dict) and version >= 2:
+            entries = [IndexEntry.from_repr(r) for r in unpacked['entries']]
+            bufs = unpacked['buffers']
+            return FileIndexV2(entries, bufs, version=version)
+        else:
+            raise ValueError('unknown index format')
+
+    def __len__(self):
+        return len(self._buf_list)
+
+
+class FileIndexV1(FileIndex):
+    """
+    Index of a BinPickle file.  This is stored in MsgPack format in the
+    BinPickle file.
+    """
+    def __init__(self, entries=None, version=1):
+        assert version == 1
         self._entries = entries if entries is not None else []
 
     @property
@@ -132,19 +164,55 @@ class FileIndex:
         """
         return self._entries
 
-    def add_entry(self, entry: IndexEntry):
+    def add_entry(self, hash, entry: IndexEntry = None):
+        if entry is None:
+            if isinstance(hash, IndexEntry):
+                entry = hash
+                hash = entry.content_hash
+            else:
+                raise RuntimeError('Version 1 does not support deduplication')
         self._entries.append(entry)
 
-    def pack(self, version=1):
-        return msgpack.packb([b.to_repr() for b in self._entries])
-
-    @classmethod
-    def unpack(cls, index, version=1):
-        unpacked = msgpack.unpackb(index)
-        if isinstance(unpacked, list):
-            return cls([IndexEntry.from_repr(r) for r in unpacked])
-        else:
-            raise ValueError('unknown index format')
+    def pack(self):
+        return msgpack.packb([b.to_repr() for b in self.buffers])
 
     def __len__(self):
         return len(self._entries)
+
+
+class FileIndexV2(FileIndex):
+    """
+    Index of a BinPickle file.  This is stored in MsgPack format in the
+    BinPickle file.
+    """
+    def __init__(self, entries=None, buffers=None, version=2):
+        assert version == 2
+        if entries is None:
+            self._entries = {}
+            self._buf_list = []
+        else:
+            self._entries = dict((e.content_hash, e) for e in entries)
+            self._buf_list = buffers
+
+    @property
+    def buffers(self):
+        """
+        Return the buffer entries in order.
+        """
+        return [self._entries[h] for h in self._buf_list]
+
+    def add_entry(self, hash, entry: IndexEntry=None):
+        if entry is not None and entry.content_hash is None:
+            raise ValueError('V2 index requires content hashes')
+        if entry is not None:
+            self._entries[hash] = entry
+        self._buf_list.append(hash)
+
+    def pack(self):
+        return msgpack.packb({
+            'entries': list(e.to_repr() for e in self._entries.values()),
+            'buffers': self._buf_list
+        })
+
+    def __len__(self):
+        return len(self._buf_list)
