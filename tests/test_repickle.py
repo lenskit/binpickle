@@ -13,26 +13,23 @@ import pickle
 import numpy as np
 import pandas as pd
 
-from hypothesis import given, assume
+from hypothesis import given, assume, settings
 import hypothesis.strategies as st
 import hypothesis.extra.numpy as nph
+
+from utils import *
+
 
 def do_repickle(*args):
     opts = docopt(repickle.__doc__, argv=[str(s) for s in args])
     repickle.main(opts)
 
 
-@given(st.data())
-def test_pickle_to_binpickle(data):
+@expensive
+@given(dataframes())
+def test_pickle_to_binpickle(df):
     with TemporaryDirectory() as tf:
         tf = Path(tf)
-        n = data.draw(st.integers(1, 10000))
-        df = pd.DataFrame({
-            'key': np.arange(0, n),
-            'count': data.draw(nph.arrays(np.int32, n)),
-            'score': data.draw(nph.arrays(np.float64, n))
-        })
-        assume(not df['score'].isna().any())
 
         src = tf / 'df.pkl'
         dst = tf / 'df.bpk'
@@ -47,17 +44,11 @@ def test_pickle_to_binpickle(data):
         assert all(df2['score'] == df['score'])
 
 
-@given(st.data())
-def test_binpickle_to_pickle(data):
+@expensive
+@given(dataframes())
+def test_binpickle_to_pickle(df):
     with TemporaryDirectory() as tf:
         tf = Path(tf)
-        n = data.draw(st.integers(1, 10000))
-        df = pd.DataFrame({
-            'key': np.arange(0, n),
-            'count': data.draw(nph.arrays(np.int32, n)),
-            'score': data.draw(nph.arrays(np.float64, n))
-        })
-        assume(not df['score'].isna().any())
 
         src = tf / 'df.bpk'
         dst = tf / 'df.pkl'
