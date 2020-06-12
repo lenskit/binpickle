@@ -107,15 +107,18 @@ jobs:
       uses: codecov/codecov-action@v1
 
   no-extras:
-    name: Test without extras
-    runs-on: ubuntu-latest
+    name: Test without extras on ${{matrix.platform}}
+    runs-on: ${{matrix.platform}}-latest
+    strategy:
+      matrix:
+        platform: [ubuntu,windows,macos]
 
     steps:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0
 
-    - name: Set up Python ${{matrix.python}}
+    - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
@@ -135,7 +138,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
-        key: no-extras-pip-${{ hashFiles('*.egg-info/requires.txt')}}
+        key: ${{matrix.platform}}-no-extras-pip-${{ hashFiles('*.egg-info/requires.txt')}}
 
     - name: Install package
       run: |
