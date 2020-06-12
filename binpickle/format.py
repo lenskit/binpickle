@@ -204,7 +204,7 @@ class FileIndexV2(FileIndex):
         """
         return [self._entries[h] for h in self._buf_list]
 
-    def add_entry(self, hash, entry: IndexEntry=None):
+    def add_entry(self, hash, entry: IndexEntry = None):
         if entry is not None and entry.content_hash is None:
             raise ValueError('V2 index requires content hashes')
         if entry is not None:

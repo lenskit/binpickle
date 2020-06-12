@@ -4,7 +4,6 @@ import logging
 import io
 import hashlib
 from zlib import adler32
-import msgpack
 
 from .compat import pickle
 from .format import FileHeader, FileTrailer, IndexEntry, FileIndex, DEFAULT_VERSION

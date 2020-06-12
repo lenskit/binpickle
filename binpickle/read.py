@@ -2,7 +2,6 @@ import mmap
 import logging
 import io
 from zlib import adler32
-import msgpack
 
 from .compat import pickle
 from .format import FileHeader, IndexEntry, FileTrailer, FileIndex
