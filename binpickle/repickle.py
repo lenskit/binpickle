@@ -60,7 +60,7 @@ def write_object(obj, dst, format, protocol):
     _log.info('writing %s file %s', format, dst)
     if format == 'pickle':
         with dst.open('wb') as f:
-            return pickle.dump(obj, f, protocol=protocol)
+            pickle.dump(obj, f, protocol=protocol)
     elif format == 'binpickle':
         binpickle.dump(obj, dst)
     else:
@@ -77,3 +77,4 @@ if __name__ == '__main__':
     opts = docopt(__doc__)
     level = logging.DEBUG if opts['--verbose'] else logging.INFO
     logging.basicConfig(level=level)
+    main(opts)
