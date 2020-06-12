@@ -105,8 +105,8 @@ def test_write_encoded_arrays(arrays, codec):
 
         with BinPickleFile(file) as bpf:
             assert not bpf.find_errors()
-            assert len(bpf.entries) == len(arrays)
-            for e, a in zip(bpf.entries, arrays):
+            assert len(bpf.index) == len(arrays)
+            for e, a in zip(bpf.index.buffers, arrays):
                 try:
                     if codec is not None:
                         assert e.codec
@@ -186,7 +186,7 @@ def test_pickle_frame_dyncodec(tmp_path, rng: np.random.Generator):
         print(df2)
         assert all(df2.columns == df.columns)
         for c in df2.columns:
-            assert all(df2[c] == df[c])
+            assert all(df2[c] == df[c].astype('f4').astype('f8'))
 
 
 @pytest.mark.parametrize(RW_PARAMS, RW_CONFIGS)
