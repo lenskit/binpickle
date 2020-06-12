@@ -98,7 +98,7 @@ jobs:
 
     - name: Install package
       run: |
-        pip install -e '.[dev,test,blosc,numcodecs]'
+        pip install -c constraints.txt -e '.[dev,test,blosc,numcodecs]'
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
