@@ -18,15 +18,15 @@ from binpickle import codecs
 RW_CTORS = [BinPickler, BinPickler.mappable, BinPickler.compressed]
 RW_CODECS = [st.just(None), st.builds(codecs.GZ)]
 if codecs.Blosc.AVAILABLE:
-    RW_CTORS.append(lambda f: BinPickler.compressed(f, codecs.Blosc('zstd', 5)))
+    RW_CTORS.append(lambda f, **kwargs: BinPickler.compressed(f, codecs.Blosc('zstd', 5), **kwargs))
     RW_CODECS.append(st.builds(codecs.Blosc))
     RW_CODECS.append(st.builds(codecs.Blosc, st.just('zstd')))
 if codecs.NC.AVAILABLE:
     import numcodecs
-    RW_CTORS.append(lambda f: BinPickler.compressed(f, numcodecs.LZMA()))
+    RW_CTORS.append(lambda f, **kwargs: BinPickler.compressed(f, numcodecs.LZMA(), **kwargs))
     RW_CODECS.append(st.builds(codecs.NC, st.just(numcodecs.LZMA())))
     # also build a chain test
-    RW_CTORS.append(lambda f: BinPickler.compressed(f, codecs.Chain([numcodecs.MsgPack(), codecs.GZ()])))
+    RW_CTORS.append(lambda f, **kwargs: BinPickler.compressed(f, codecs.Chain([numcodecs.MsgPack(), codecs.GZ()]), **kwargs))
 
 RW_CONFIGS = it.product(
     RW_CTORS,
