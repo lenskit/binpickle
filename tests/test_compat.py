@@ -32,7 +32,7 @@ def v_prev2():
         btf = Path(btf)
         wt_dir = btf / 'binpickle-tree'
         _log.info('creating worktree for version 0.3.2 in %s', wt_dir)
-        sp.run(['git', 'worktree', 'add', wt_dir, 'v0.3.2'], check=True)
+        sp.run(['git', 'worktree', 'add', fspath(wt_dir), 'v0.3.2'], check=True)
         shutil.copy(ROOT / 'binpickle' / 'repickle.py', wt_dir / 'repickle.py')
         repickle(wt_dir, '--help')
         yield wt_dir
