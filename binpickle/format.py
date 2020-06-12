@@ -109,7 +109,10 @@ class IndexEntry(NamedTuple):
 
     def to_repr(self):
         "Convert an index entry to its MsgPack-compatible representation"
-        return dict((k, getattr(self, k)) for k in self._fields)
+        repr = dict((k, getattr(self, k)) for k in self._fields)
+        if self.content_hash is None:
+            del repr['content_hash']
+        return repr
 
     @classmethod
     def from_repr(cls, repr):

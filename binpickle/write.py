@@ -69,6 +69,7 @@ class BinPickler:
         self.filename = filename
         self.align = align
         self._file = open(filename, 'wb')
+        self.version = version
         self.index = FileIndex(version=version)
         self.codec = codec
         self.deduplicate = version >= 2
@@ -77,14 +78,14 @@ class BinPickler:
         self._init_header()
 
     @classmethod
-    def mappable(cls, filename):
+    def mappable(cls, filename, version=DEFAULT_VERSION):
         "Convenience method to construct a pickler for memory-mapped use."
-        return cls(filename, align=True)
+        return cls(filename, align=True, version=version)
 
     @classmethod
-    def compressed(cls, filename, codec=codecs.GZ()):
+    def compressed(cls, filename, codec=codecs.GZ(), version=DEFAULT_VERSION):
         "Convenience method to construct a pickler for compressed storage."
-        return cls(filename, codec=codec)
+        return cls(filename, codec=codec, version=version)
 
     def dump(self, obj):
         "Dump an object to the file. Can only be called once."
@@ -112,7 +113,7 @@ class BinPickler:
         pos = self._file.tell()
         if pos > 0:
             warnings.warn('BinPickler not at beginning of file')
-        h = FileHeader()
+        h = FileHeader(version=self.version)
         _log.debug('initializing header for %s', self.filename)
         self._file.write(h.encode())
         assert self._file.tell() == pos + 16
@@ -184,7 +185,7 @@ class BinPickler:
 
         pos = self._file.tell()
         _log.debug('finalizing file with length %d', pos)
-        h = FileHeader(length=pos)
+        h = FileHeader(length=pos, version=self.version)
         self._file.seek(0)
         self._file.write(h.encode())
         self._file.flush()
