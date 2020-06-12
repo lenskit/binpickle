@@ -10,7 +10,8 @@ import hypothesis.strategies as st
 import hypothesis.extra.numpy as nph
 
 
-expensive = settings(max_examples=10, deadline=None)
+def expensive(n=10):
+    return settings(max_examples=n, deadline=None)
 
 
 @st.composite

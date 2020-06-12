@@ -25,7 +25,7 @@ def do_repickle(*args):
     repickle.main(opts)
 
 
-@expensive
+@expensive()
 @given(dataframes())
 def test_pickle_to_binpickle(df):
     with TemporaryDirectory() as tf:
@@ -39,12 +39,10 @@ def test_pickle_to_binpickle(df):
         assert dst.exists()
         df2 = binpickle.load(dst)
 
-        assert all(df2['key'] == df['key'])
-        assert all(df2['count'] == df['count'])
-        assert all(df2['score'] == df['score'])
+        assert df2.equals(df)
 
 
-@expensive
+@expensive()
 @given(dataframes())
 def test_binpickle_to_pickle(df):
     with TemporaryDirectory() as tf:
@@ -58,6 +56,4 @@ def test_binpickle_to_pickle(df):
         assert dst.exists()
         df2 = pd.read_pickle(dst)
 
-        assert all(df2['key'] == df['key'])
-        assert all(df2['count'] == df['count'])
-        assert all(df2['score'] == df['score'])
+        assert df2.equals(df)
