@@ -17,7 +17,7 @@ import hypothesis.extra.numpy as nph
 import binpickle
 import pickle
 
-from pytest import fixture
+from pytest import fixture, skip
 
 from utils import *
 from test_rw import RW_CTORS
@@ -28,6 +28,10 @@ ROOT = Path(__file__).parent.parent
 
 @fixture(scope='session')
 def v_prev2():
+    git = ROOT / '.git'
+    if not git.exists():
+        skip('not in a git checkout')
+
     with TemporaryDirectory(prefix='binpickle-test-') as btf:
         btf = Path(btf)
         wt_dir = btf / 'binpickle-tree'
