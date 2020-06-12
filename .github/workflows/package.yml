@@ -100,7 +100,7 @@ jobs:
       run: |
         pip install -e '.[dev,test,blosc,numcodecs]'
       env:
-        PIP_PREFER_BINARY=yes
+        PIP_PREFER_BINARY: yes
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
