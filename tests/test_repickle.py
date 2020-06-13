@@ -1,4 +1,5 @@
 import pytest
+
 try:
     from docopt import docopt
     from binpickle import repickle
@@ -23,6 +24,16 @@ from utils import *
 def do_repickle(*args):
     opts = docopt(repickle.__doc__, argv=[str(s) for s in args])
     repickle.main(opts)
+
+
+def test_read_bad_format():
+    with pytest.raises(ValueError):
+        repickle.read_object(Path('setup.py'), 'bob')
+
+
+def test_write_bad_format():
+    with pytest.raises(ValueError):
+        repickle.write_object(None, Path('setup.pyc'), 'bob', None)
 
 
 @expensive()
