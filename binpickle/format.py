@@ -139,16 +139,11 @@ class FileIndex:
     def unpack(cls, index, version=DEFAULT_VERSION):
         unpacked = msgpack.unpackb(index)
         if isinstance(unpacked, list):
-            return FileIndexV1([IndexEntry.from_repr(r) for r in unpacked], version=1)
+            return FileIndexV1.from_repr(unpacked)
         elif isinstance(unpacked, dict) and version >= 2:
-            entries = [IndexEntry.from_repr(r) for r in unpacked['entries']]
-            bufs = unpacked['buffers']
-            return FileIndexV2(entries, bufs, version=version)
+            return FileIndexV2.from_repr(unpacked)
         else:
             raise ValueError('unknown index format')
-
-    def __len__(self):
-        return len(self._buf_list)
 
 
 class FileIndexV1(FileIndex):
@@ -178,6 +173,10 @@ class FileIndexV1(FileIndex):
 
     def pack(self):
         return msgpack.packb([b.to_repr() for b in self.buffers])
+
+    @classmethod
+    def from_repr(cls, repr):
+        return cls([IndexEntry.from_repr(r) for r in repr], version=1)
 
     def __len__(self):
         return len(self._entries)
@@ -216,6 +215,12 @@ class FileIndexV2(FileIndex):
             'entries': list(e.to_repr() for e in self._entries.values()),
             'buffers': self._buf_list
         })
+
+    @classmethod
+    def from_repr(cls, repr):
+        entries = [IndexEntry.from_repr(r) for r in repr['entries']]
+        bufs = repr['buffers']
+        return cls(entries, bufs, version=version)
 
     def __len__(self):
         return len(self._buf_list)

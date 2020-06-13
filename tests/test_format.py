@@ -1,3 +1,5 @@
+import msgpack
+
 from pytest import raises
 
 from binpickle.format import *
@@ -68,3 +70,8 @@ def test_index_empty_v1():
     assert len(ipack) == 1
     i2 = FileIndex.unpack(ipack)
     assert len(i2) == 0
+
+def test_unpack_invalid():
+    pack = msgpack.packb(42)
+    with raises(ValueError):
+        FileIndex.unpack(pack)
