@@ -71,7 +71,33 @@ def test_index_empty_v1():
     i2 = FileIndex.unpack(ipack)
     assert len(i2) == 0
 
+
 def test_unpack_invalid():
     pack = msgpack.packb(42)
     with raises(ValueError):
         FileIndex.unpack(pack)
+
+
+def test_add_entry_v1():
+    index = FileIndex(version=1)
+    entry = IndexEntry(0, 100, 100, 0)
+    index.add_entry(None, entry)
+    assert len(index) == 1
+    assert index.buffers == [entry]
+
+
+def test_add_entry_v2():
+    index = FileIndex(version=2)
+    entry = IndexEntry(0, 100, 100, 0, b'bob')
+    index.add_entry(b'bob', entry)
+    assert len(index) == 1
+    assert index.buffers == [entry]
+
+
+def test_add_entry_v2_reuse():
+    index = FileIndex(version=2)
+    entry = IndexEntry(0, 100, 100, 0, b'bob')
+    index.add_entry(b'bob', entry)
+    index.add_entry(b'bob', None)
+    assert len(index) == 2
+    assert index.buffers == [entry, entry]

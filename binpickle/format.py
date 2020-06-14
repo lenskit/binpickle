@@ -176,7 +176,7 @@ class FileIndexV1(FileIndex):
 
     @classmethod
     def from_repr(cls, repr, version):
-        return cls([IndexEntry.from_repr(r) for r in repr], version=version)
+        return cls([IndexEntry.from_repr(r) for r in repr], version=1)
 
     def __len__(self):
         return len(self._entries)
