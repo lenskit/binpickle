@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 import pytest
-from hypothesis import given, assume, settings
+from hypothesis import given, settings
 import hypothesis.strategies as st
 import hypothesis.extra.numpy as nph
 import hypothesis.extra.pandas as pdh
@@ -71,6 +71,7 @@ def test_bad_offset():
             assert 'before expected start' in errs[0]
 
 
+@settings(deadline=None)
 @given(st.lists(st.binary(min_size=5), min_size=2, max_size=10), st.data())
 def test_bad_checksum_v1(buffers, data):
     with TemporaryDirectory() as tmp:
@@ -107,6 +108,7 @@ def test_bad_checksum_v1(buffers, data):
             assert 'invalid checksum' in errs[0]
 
 
+@settings(deadline=None)
 @given(st.lists(st.binary(min_size=5), min_size=2, max_size=10), st.data())
 def test_bad_checksum_v2(buffers, data):
     with TemporaryDirectory() as tmp:
