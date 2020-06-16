@@ -4,6 +4,7 @@ Constants and functions defining the binpickle format.
 
 import struct
 from typing import NamedTuple
+from abc import ABCMeta, abstractmethod
 import msgpack
 
 MAGIC = b'BPCK'
@@ -121,8 +122,12 @@ class IndexEntry(NamedTuple):
             raise TypeError("IndexEntry representation must be a dict")
         return cls(**repr)
 
+    def __hash__(self):
+        return hash((self.offset, self.enc_length, self.dec_length,
+                     self.checksum, self.content_hash))
 
-class FileIndex:
+
+class FileIndex(metaclass=ABCMeta):
     """
     Index of a BinPickle file.  This is stored in MsgPack format in the
     BinPickle file.
@@ -145,6 +150,27 @@ class FileIndex:
         else:
             raise ValueError('unknown index format')
 
+    @abstractmethod
+    def buffers(self):
+        """
+        Return the buffer entries in order, as needed to reconstitute the
+        pickled object.  Duplicates are copied in proper positions.
+        """
+        pass
+
+    @abstractmethod
+    def add_entry(self, hash, entry: IndexEntry = None):
+        """
+        Add an entry to the index.
+        """
+        pass
+
+    @abstractmethod
+    def pack(self):
+        """
+        Pack the index into a binary buffer.
+        """
+
 
 class FileIndexV1(FileIndex):
     """
@@ -155,11 +181,7 @@ class FileIndexV1(FileIndex):
         assert version == 1
         self._entries = entries if entries is not None else []
 
-    @property
     def buffers(self):
-        """
-        Return the buffer entries in order.
-        """
         return self._entries
 
     def add_entry(self, hash, entry: IndexEntry = None):
@@ -172,7 +194,7 @@ class FileIndexV1(FileIndex):
         self._entries.append(entry)
 
     def pack(self):
-        return msgpack.packb([b.to_repr() for b in self.buffers])
+        return msgpack.packb([b.to_repr() for b in self.buffers()])
 
     @classmethod
     def from_repr(cls, repr, version):
@@ -196,11 +218,7 @@ class FileIndexV2(FileIndex):
             self._entries = dict((e.content_hash, e) for e in entries)
             self._buf_list = buffers
 
-    @property
     def buffers(self):
-        """
-        Return the buffer entries in order.
-        """
         return [self._entries[h] for h in self._buf_list]
 
     def add_entry(self, hash, entry: IndexEntry = None):

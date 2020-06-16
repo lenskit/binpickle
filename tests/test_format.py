@@ -57,7 +57,7 @@ def test_catch_bad_padding():
 def test_index_empty():
     index = FileIndex()
     assert len(index) == 0
-    assert len(index.buffers) == 0
+    assert len(index.buffers()) == 0
     i2 = FileIndex.unpack(index.pack())
     assert len(i2) == 0
 
@@ -65,7 +65,7 @@ def test_index_empty():
 def test_index_empty_v1():
     index = FileIndex(version=1)
     assert len(index) == 0
-    assert len(index.buffers) == 0
+    assert len(index.buffers()) == 0
     ipack = index.pack()
     assert len(ipack) == 1
     i2 = FileIndex.unpack(ipack)
@@ -83,7 +83,7 @@ def test_add_entry_v1():
     entry = IndexEntry(0, 100, 100, 0)
     index.add_entry(None, entry)
     assert len(index) == 1
-    assert index.buffers == [entry]
+    assert index.buffers() == [entry]
 
 
 def test_add_entry_v2():
@@ -91,7 +91,7 @@ def test_add_entry_v2():
     entry = IndexEntry(0, 100, 100, 0, b'bob')
     index.add_entry(b'bob', entry)
     assert len(index) == 1
-    assert index.buffers == [entry]
+    assert index.buffers() == [entry]
 
 
 def test_add_entry_v2_reuse():
@@ -100,4 +100,4 @@ def test_add_entry_v2_reuse():
     index.add_entry(b'bob', entry)
     index.add_entry(b'bob', None)
     assert len(index) == 2
-    assert index.buffers == [entry, entry]
+    assert index.buffers() == [entry, entry]

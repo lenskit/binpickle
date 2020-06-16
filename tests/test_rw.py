@@ -79,7 +79,7 @@ def test_write_buf(tmp_path, rng: np.random.Generator):
 
     with BinPickleFile(file, direct=True) as bpf:
         assert len(bpf.index) == 1
-        e = bpf.index.buffers[0]
+        e = bpf.index.buffers()[0]
         assert e.dec_length == a.nbytes
         assert e.enc_length == a.nbytes
         b2 = bpf._read_buffer(e)
@@ -106,7 +106,7 @@ def test_write_encoded_arrays(arrays, codec):
         with BinPickleFile(file) as bpf:
             assert not bpf.find_errors()
             assert len(bpf.index) == len(arrays)
-            for e, a in zip(bpf.index.buffers, arrays):
+            for e, a in zip(bpf.index.buffers(), arrays):
                 try:
                     if codec is not None:
                         assert e.codec
