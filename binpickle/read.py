@@ -72,14 +72,10 @@ class BinPickleFile:
             errors.append(f'invalid index checksum ({i_sum} != {self.trailer.checksum})')
 
         position = 16
-        seen = set()
-        for i, e in enumerate(self.index.buffers()):
-            _log.debug('entry %d: %s', i, e)
-            if e not in seen:
-                if e.offset < position:
-                    errors.append(f'entry {i}: offset {e.offset} before expected start {position}')
-                position = e.offset + e.enc_length
-                seen.add(e)
+        for i, e in enumerate(self.index.stored_buffers()):
+            if e.offset < position:
+                errors.append(f'entry {i}: offset {e.offset} before expected start {position}')
+            position = e.offset + e.enc_length
 
             cks = adler32(self._read_buffer(e, direct=True, decode=False))
             if cks != e.checksum:

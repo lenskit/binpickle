@@ -159,6 +159,14 @@ class FileIndex(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def stored_buffers(self):
+        """
+        Return the actually stored buffer entries in the order they appear
+        in the file.  Does not include duplicates.
+        """
+        pass
+
+    @abstractmethod
     def add_entry(self, hash, entry: IndexEntry = None):
         """
         Add an entry to the index.
@@ -182,6 +190,9 @@ class FileIndexV1(FileIndex):
         self._entries = entries if entries is not None else []
 
     def buffers(self):
+        return self._entries
+
+    def stored_buffers(self):
         return self._entries
 
     def add_entry(self, hash, entry: IndexEntry = None):
@@ -220,6 +231,9 @@ class FileIndexV2(FileIndex):
 
     def buffers(self):
         return [self._entries[h] for h in self._buf_list]
+
+    def stored_buffers(self):
+        return list(self._entries.values())
 
     def add_entry(self, hash, entry: IndexEntry = None):
         if entry is not None and entry.content_hash is None:
