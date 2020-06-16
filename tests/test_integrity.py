@@ -1,6 +1,7 @@
 from tempfile import TemporaryDirectory
 from pathlib import Path
 from mmap import mmap
+import logging
 
 import pandas as pd
 import numpy as np
@@ -14,6 +15,8 @@ import hypothesis.extra.pandas as pdh
 from binpickle import dump, BinPickleFile, BinPickler
 
 from test_rw import RW_CODECS
+
+_log = logging.getLogger(__name__)
 
 MODES = st.one_of(RW_CODECS + [st.just('mappable')])
 PANDAS_DATA = pdh.data_frames(pdh.columns(5, dtype='i4'))
@@ -89,7 +92,7 @@ def test_bad_checksum_v1(buffers, data):
             bp._finish_file()
 
         with file.open('r+b') as f, mmap(f.fileno(), 0) as map:
-            print(f'frobbing {start} + {to_frob}')
+            _log.info('frobbing %s + %s', start, to_frob)
             for i in range(to_frob):
                 pos = start + i
                 map[pos] = map[pos] ^ 0xFF
@@ -97,7 +100,8 @@ def test_bad_checksum_v1(buffers, data):
 
         with BinPickleFile(file) as bpf:
             errs = bpf.find_errors()
-            print(errs)
+            for e in errs:
+                _log.info('found error: %s', e)
             # we have checksum errors in 1 of them
             assert len(errs) == 1
             assert 'invalid checksum' in errs[0]
@@ -124,7 +128,7 @@ def test_bad_checksum_v2(buffers, data):
             bp._finish_file()
 
         with file.open('r+b') as f, mmap(f.fileno(), 0) as map:
-            print(f'frobbing {start} + {to_frob}')
+            _log.info('frobbing %s + %s', start, to_frob)
             for i in range(to_frob):
                 pos = start + i
                 map[pos] = map[pos] ^ 0xFF
@@ -132,7 +136,8 @@ def test_bad_checksum_v2(buffers, data):
 
         with BinPickleFile(file) as bpf:
             errs = bpf.find_errors()
-            print(errs)
+            for e in errs:
+                _log.info('found error: %s', e)
             # we have checksum errors in the repeated item
             assert len(errs) == 1
             assert all('invalid checksum' in e for e in errs)
