@@ -19,6 +19,8 @@ requires = [
 GitHub = "https://github.com/lenskit/binpickle"
 
 [tool.flit.metadata.requires-extra]
+blosc = [ "blosc" ]
+numcodecs = [ "numcodecs >= 0.7" ]
 test = [
     "pytest >= 5",
     "pytest-cov",
