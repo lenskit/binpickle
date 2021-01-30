@@ -8,6 +8,7 @@ readme = "README.md"
 homepage = "https://binpickle.lenskit.org"
 documentation = "https://binpickle.lenskit.org"
 repository = "https://github.com/lenskit/binpickle"
+include = ["tests/*"]
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
