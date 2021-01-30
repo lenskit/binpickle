@@ -121,7 +121,6 @@ jobs:
     - name: Get Pip cache dir
       id: pip-cache
       run: |
-        python setup.py egg_info
         echo "::set-output name=dir::$(pip cache dir)"
       shell: bash
 
@@ -164,13 +163,10 @@ jobs:
         python-version: 3.8
 
     - name: Install Python deps
-      run: pip install -U pip setuptools wheel twine
+      run: pip install -U flit
 
-    - name: Build source dist
-      run: python setup.py sdist
-
-    - name: Build wheel
-      run: python setup.py bdist_wheel
+    - name: Build distribution
+      run: flit build
 
     - name: Save archive
       uses: actions/upload-artifact@v1
