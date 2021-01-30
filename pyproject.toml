@@ -1,3 +1,35 @@
+[tool.poetry]
+name = "binpickle"
+version = "0.4.0"
+description = "Efficient binary storage of ML models"
+authors = ["Michael Ekstrand <michaelekstrand@boisestate.edu>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://binpickle.lenskit.org"
+documentation = "https://binpickle.lenskit.org"
+repository = "https://github.com/lenskit/binpickle"
+
+[tool.poetry.dependencies]
+python = "^3.6.1"
+msgpack = "^1.0"
+pickle5 = { version="^0.0.11", python="<3.8" }
+
+[tool.poetry.dev-dependencies]
+sphinx = "*"
+flake8 = "*"
+rstcheck = "*"
+pytest = ">= 4"
+pytest-cov = "*"
+hypothesis = ">= 6"
+pandas = "^1.0"
+numpy = "^1.17"
+blosc = { version="^1", optional=true }
+numcodecs = { version="^0.7", optional=true }
+
+[tool.poetry.extras]
+blosc = ["blosc"]
+numcodecs = ["numcodecs"]
+
 [build-system]
-requires = ["setuptools>=40.9.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
