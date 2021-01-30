@@ -180,9 +180,9 @@ jobs:
     - name: Publish PyPI packages
       if: github.event_name == 'release'
       run: |
-        twine upload dist/binpickle*.tar.gz dist/binpickle*.whl
+        flit publish
       shell: bash
       env:
         TWINE_NON_INTERACTIVE: y
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.TWINE_TOKEN }}
+        FLIT_USERNAME: __token__
+        FLIT_PASSWORD: ${{ secrets.TWINE_TOKEN }}
