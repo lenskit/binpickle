@@ -12,7 +12,9 @@ repository = "https://github.com/lenskit/binpickle"
 [tool.poetry.dependencies]
 python = "^3.6.1"
 msgpack = "^1.0"
-pickle5 = { version="^0.0.11", python="<3.8" }
+pickle5 = { version=">=0.0.11", python="<3.8" }
+blosc = { version="^1", optional=true }
+numcodecs = { version="^0.7", optional=true }
 
 [tool.poetry.dev-dependencies]
 sphinx = "*"
@@ -23,12 +25,14 @@ pytest-cov = "*"
 hypothesis = ">= 6"
 pandas = "^1.0"
 numpy = "^1.17"
-blosc = { version="^1", optional=true }
-numcodecs = { version="^0.7", optional=true }
 
 [tool.poetry.extras]
 blosc = ["blosc"]
 numcodecs = ["numcodecs"]
+
+[tool.poetry2conda]
+name = "binpickle"
+channels = ["conda-forge"]
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
