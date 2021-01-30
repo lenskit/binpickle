@@ -197,7 +197,7 @@ def test_dump_frame(tmp_path, rng: np.random.Generator):
 
 
 @given(arrays(scalar_dtypes(), st.integers(500, 10000)))
-def test_compress_many_arrays(tmp_path, a):
+def test_compress_many_arrays(a):
     "Pickle random NumPy arrays"
     assume(not any(np.isnan(a)))
 
