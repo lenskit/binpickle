@@ -40,7 +40,7 @@ jobs:
 
     - name: Install package
       run: |
-        flit install -s --extras dev
+        flit install --pth-file --extras dev
 
     - name: Run lint
       run: |
@@ -96,7 +96,7 @@ jobs:
 
     - name: Install package
       run: |
-        flit install -s --extras all
+        flit install --pth-file --extras all
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
@@ -137,7 +137,7 @@ jobs:
 
     - name: Install package
       run: |
-        flit install -s --extras dev,test
+        flit install --pth-file --extras dev,test
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
