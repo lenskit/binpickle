@@ -1,3 +1,5 @@
+import msgpack
+
 from pytest import raises
 
 from binpickle.format import *
@@ -42,7 +44,7 @@ def test_catch_bad_magic():
 
 def test_catch_bad_version():
     with raises(ValueError) as exc:
-        FileHeader.decode(b'BPCK\x00\x02\x00\x00' + (b'\x00' * 8))
+        FileHeader.decode(b'BPCK\x00\x08\x00\x00' + (b'\x00' * 8))
     assert 'version' in str(exc.value)
 
 
@@ -52,3 +54,50 @@ def test_catch_bad_padding():
     assert 'padding' in str(exc.value)
 
 
+def test_index_empty():
+    index = FileIndex()
+    assert len(index) == 0
+    assert len(index.buffers()) == 0
+    i2 = FileIndex.unpack(index.pack())
+    assert len(i2) == 0
+
+
+def test_index_empty_v1():
+    index = FileIndex(version=1)
+    assert len(index) == 0
+    assert len(index.buffers()) == 0
+    ipack = index.pack()
+    assert len(ipack) == 1
+    i2 = FileIndex.unpack(ipack)
+    assert len(i2) == 0
+
+
+def test_unpack_invalid():
+    pack = msgpack.packb(42)
+    with raises(ValueError):
+        FileIndex.unpack(pack)
+
+
+def test_add_entry_v1():
+    index = FileIndex(version=1)
+    entry = IndexEntry(0, 100, 100, 0)
+    index.add_entry(None, entry)
+    assert len(index) == 1
+    assert index.buffers() == [entry]
+
+
+def test_add_entry_v2():
+    index = FileIndex(version=2)
+    entry = IndexEntry(0, 100, 100, 0, b'bob')
+    index.add_entry(b'bob', entry)
+    assert len(index) == 1
+    assert index.buffers() == [entry]
+
+
+def test_add_entry_v2_reuse():
+    index = FileIndex(version=2)
+    entry = IndexEntry(0, 100, 100, 0, b'bob')
+    index.add_entry(b'bob', entry)
+    index.add_entry(b'bob', None)
+    assert len(index) == 2
+    assert index.buffers() == [entry, entry]

@@ -2,11 +2,11 @@ import mmap
 import warnings
 import logging
 import io
+import hashlib
 from zlib import adler32
-import msgpack
 
 from .compat import pickle
-from .format import FileHeader, FileTrailer, IndexEntry
+from .format import FileHeader, FileTrailer, IndexEntry, FileIndex, DEFAULT_VERSION
 from . import codecs
 
 _log = logging.getLogger(__name__)
@@ -64,24 +64,27 @@ class BinPickler:
             use different codecs for different types or sizes of buffers).
     """
 
-    def __init__(self, filename, *, align=False, codec=None):
+    def __init__(self, filename, *, align=False, codec=None, version=DEFAULT_VERSION):
         self.filename = filename
         self.align = align
         self._file = open(filename, 'wb')
-        self.entries = []
+        self.version = version
+        self.index = FileIndex(version=version)
         self.codec = codec
+        self.deduplicate = version >= 2
+        self.buffers_written = set()
 
         self._init_header()
 
     @classmethod
-    def mappable(cls, filename):
+    def mappable(cls, filename, version=DEFAULT_VERSION):
         "Convenience method to construct a pickler for memory-mapped use."
-        return cls(filename, align=True)
+        return cls(filename, align=True, version=version)
 
     @classmethod
-    def compressed(cls, filename, codec=codecs.GZ()):
+    def compressed(cls, filename, codec=codecs.GZ(), version=DEFAULT_VERSION):
         "Convenience method to construct a pickler for compressed storage."
-        return cls(filename, codec=codec)
+        return cls(filename, codec=codec, version=version)
 
     def dump(self, obj):
         "Dump an object to the file. Can only be called once."
@@ -90,7 +93,7 @@ class BinPickler:
                             buffer_callback=self._write_buffer)
         pk.dump(obj)
         buf = bio.getbuffer()
-        _log.info('pickled %d bytes with %d buffers', buf.nbytes, len(self.entries))
+        _log.info('pickled %d bytes with %d buffers', buf.nbytes, len(self.index))
         self._write_buffer(buf)
         self._finish_file()
 
@@ -109,7 +112,7 @@ class BinPickler:
         pos = self._file.tell()
         if pos > 0:
             warnings.warn('BinPickler not at beginning of file')
-        h = FileHeader()
+        h = FileHeader(version=self.version)
         _log.debug('initializing header for %s', self.filename)
         self._file.write(h.encode())
         assert self._file.tell() == pos + 16
@@ -131,6 +134,16 @@ class BinPickler:
     def _write_buffer(self, buf):
         mv = memoryview(buf)
         offset = self._file.tell()
+        if self.deduplicate:
+            sha1 = hashlib.sha1(mv).digest()
+            if sha1 in self.buffers_written:
+                _log.debug('repeated buffer hash %s', sha1)
+                self.index.add_entry(sha1, None)
+                return
+            else:
+                self.buffers_written.add(sha1)
+        else:
+            sha1 = None
 
         if self.align:
             off2 = _align_pos(offset)
@@ -152,15 +165,15 @@ class BinPickler:
 
         assert self._file.tell() == offset + cko.bytes
 
-        self.entries.append(IndexEntry(offset, cko.bytes, length, cko.checksum,
-                                       c_spec))
+        self.index.add_entry(sha1, IndexEntry(offset, cko.bytes, length,
+                                              cko.checksum, sha1, c_spec))
 
     def _write_index(self):
-        buf = msgpack.packb([e.to_repr() for e in self.entries])
+        buf = self.index.pack()
         pos = self._file.tell()
         nbs = len(buf)
         _log.debug('writing %d index entries (%d bytes) at position %d',
-                   len(self.entries), nbs, pos)
+                   len(self.index), nbs, pos)
         self._file.write(buf)
         ft = FileTrailer(pos, nbs, adler32(buf))
         self._file.write(ft.encode())
@@ -171,7 +184,7 @@ class BinPickler:
 
         pos = self._file.tell()
         _log.debug('finalizing file with length %d', pos)
-        h = FileHeader(length=pos)
+        h = FileHeader(length=pos, version=self.version)
         self._file.seek(0)
         self._file.write(h.encode())
         self._file.flush()

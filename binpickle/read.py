@@ -2,10 +2,9 @@ import mmap
 import logging
 import io
 from zlib import adler32
-import msgpack
 
 from .compat import pickle
-from .format import FileHeader, IndexEntry, FileTrailer
+from .format import FileHeader, IndexEntry, FileTrailer, FileIndex
 from .codecs import get_codec
 
 _log = logging.getLogger(__name__)
@@ -46,13 +45,14 @@ class BinPickleFile:
         """
         Load the object from the binpickle file.
         """
-        if not self.entries:
+        if not self.index or len(self.index) == 0:
             raise ValueError('empty pickle file has no objects')
-        p_bytes = self._read_buffer(self.entries[-1], direct=True)
+        buffers = self.index.buffers()
+        p_bytes = self._read_buffer(buffers[-1], direct=True)
         _log.debug('unpickling %d bytes and %d buffers',
-                   len(p_bytes), len(self.entries) - 1)
+                   len(p_bytes), len(self.index) - 1)
 
-        buf_gen = (self._read_buffer(e) for e in self.entries[:-1])
+        buf_gen = (self._read_buffer(e) for e in buffers[:-1])
         up = pickle.Unpickler(io.BytesIO(p_bytes), buffers=buf_gen)
         return up.load()
 
@@ -72,16 +72,19 @@ class BinPickleFile:
             errors.append(f'invalid index checksum ({i_sum} != {self.trailer.checksum})')
 
         position = 16
-        for i, e in enumerate(self.entries):
+        for i, e in enumerate(self.index.stored_buffers()):
             if e.offset < position:
                 errors.append(f'entry {i}: offset {e.offset} before expected start {position}')
-            buf = self._read_buffer(e, direct=True)
-            ndec = len(buf)
-            if ndec != e.dec_length:
-                errors.append(f'entry {i}: decoded to {ndec} bytes, expected {e.dec_length}')
+            position = e.offset + e.enc_length
+
             cks = adler32(self._read_buffer(e, direct=True, decode=False))
             if cks != e.checksum:
-                errors.append('entry {i}: invalid checksum ({cks} != {e.checksum}')
+                errors.append(f'entry {i}: invalid checksum ({cks} != {e.checksum}')
+            else:
+                buf = self._read_buffer(e, direct=True)
+                ndec = len(buf)
+                if ndec != e.dec_length:
+                    errors.append(f'entry {i}: decoded to {ndec} bytes, expected {e.dec_length}')
 
         return errors
 
@@ -108,8 +111,8 @@ class BinPickleFile:
         i_start = self.trailer.offset
         i_end = i_start + self.trailer.length
         self._index_buf = self._mv[i_start:i_end]
-        self.entries = [IndexEntry.from_repr(e) for e in msgpack.unpackb(self._index_buf)]
-        _log.debug('read %d entries from file', len(self.entries))
+        self.index = FileIndex.unpack(self._index_buf)
+        _log.debug('read %d entries from file', len(self.index))
 
     def _read_buffer(self, entry: IndexEntry, *, direct=None, decode=True):
         start = entry.offset
