@@ -39,3 +39,10 @@ include = ["tests/*"]
 exclude = [
     ".github"
 ]
+
+[tool.envtool.conda]
+name = "binpickle"
+channels = ["conda-forge"]
+
+[tool.envtool.conda.rename]
+msgpack = "msgpack-python"
