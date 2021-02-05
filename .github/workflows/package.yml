@@ -25,7 +25,6 @@ jobs:
     - name: Prep Pip caching
       id: pip-cache
       run: |
-        python setup.py egg_info
         echo "::set-output name=dir::$(pip cache dir)"
       shell: bash
 
@@ -33,7 +32,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
-        key: py38-lint-pip-${{ hashFiles('*.egg-info/requires.txt')}}
+        key: py38-lint-pip-${{ hashFiles('pyproject.toml')}}
 
     - name: Install environment
       run: |
@@ -82,7 +81,6 @@ jobs:
     - name: Prep Pip cache
       id: pip-cache
       run: |
-        python setup.py egg_info
         echo "::set-output name=dir::$(pip cache dir)"
       shell: bash
 
@@ -90,7 +88,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
-        key: ${{ matrix.platform }}-py${{ matrix.python }}-pip-${{ hashFiles('*.egg-info/requires.txt')}}
+        key: ${{ matrix.platform }}-py${{ matrix.python }}-pip-${{ hashFiles('pyproject.toml')}}
 
     - name: Install environment
       run: |
@@ -124,7 +122,6 @@ jobs:
     - name: Get Pip cache dir
       id: pip-cache
       run: |
-        python setup.py egg_info
         echo "::set-output name=dir::$(pip cache dir)"
       shell: bash
 
@@ -132,7 +129,7 @@ jobs:
       uses: actions/cache@v1
       with:
         path: ${{ steps.pip-cache.outputs.dir }}
-        key: no-extras-pip-${{ hashFiles('*.egg-info/requires.txt')}}
+        key: no-extras-pip-${{ hashFiles('pyproject.toml')}}
 
     - name: Install environment
       run: |
