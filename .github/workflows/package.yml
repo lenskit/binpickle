@@ -22,10 +22,6 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: Install environment
-      run: |
-        pip install -U setuptools wheel
-
     - name: Prep Pip caching
       id: pip-cache
       run: |
@@ -39,16 +35,20 @@ jobs:
         path: ${{ steps.pip-cache.outputs.dir }}
         key: py38-lint-pip-${{ hashFiles('*.egg-info/requires.txt')}}
 
+    - name: Install environment
+      run: |
+        pip install -U poetry
+
     - name: Install package
       run: |
-        pip install -e '.[dev]'
+        poetry install
 
     - name: Run lint
       run: |
         # Flake8 problem matcher & transform regex from https://github.com/TrueBrain/actions-flake8
         echo "::add-matcher::.github/flake8-matcher.json"
         set -o pipefail
-        flake8 |sed -r 's/: ([^W][0-9][0-9][0-9])/: error: \1/;s/: (W[0-9][0-9][0-9])/: warning: \1/'
+        poetry run flake8 |sed -r 's/: ([^W][0-9][0-9][0-9])/: error: \1/;s/: (W[0-9][0-9][0-9])/: warning: \1/'
         echo "::remove-matcher owner=flake8::"
 
   test:
@@ -79,10 +79,6 @@ jobs:
       with:
         python-version: ${{matrix.python}}
 
-    - name: Install environment
-      run: |
-        pip install -U setuptools wheel
-
     - name: Prep Pip cache
       id: pip-cache
       run: |
@@ -96,12 +92,17 @@ jobs:
         path: ${{ steps.pip-cache.outputs.dir }}
         key: ${{ matrix.platform }}-py${{ matrix.python }}-pip-${{ hashFiles('*.egg-info/requires.txt')}}
 
+    - name: Install environment
+      run: |
+        pip install -U poetry
+
     - name: Install package
       run: |
-        pip install -e '.[dev,test,blosc,numcodecs]'
+        poetry install -E blosc -E numcodecs
 
     - name: Run tests
-      run: python -m pytest --cov=binpickle --cov-report=xml tests
+      run: |
+        poetry run python -m pytest --cov=binpickle --cov-report=xml tests
 
     - name: Upload coverage
       uses: codecov/codecov-action@v1
@@ -120,10 +121,6 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: Install environment
-      run: |
-        pip install -U setuptools wheel
-
     - name: Get Pip cache dir
       id: pip-cache
       run: |
@@ -137,12 +134,16 @@ jobs:
         path: ${{ steps.pip-cache.outputs.dir }}
         key: no-extras-pip-${{ hashFiles('*.egg-info/requires.txt')}}
 
+    - name: Install environment
+      run: |
+        pip install -U poetry
+
     - name: Install package
       run: |
-        pip install -e '.[dev,test]'
+        poetry install
 
     - name: Run tests
-      run: python -m pytest --cov=binpickle --cov-report=xml tests
+      run: poetry run python -m pytest --cov=binpickle --cov-report=xml tests
 
     - name: Upload coverage
       uses: codecov/codecov-action@v1
@@ -166,13 +167,10 @@ jobs:
         python-version: 3.8
 
     - name: Install Python deps
-      run: pip install -U pip setuptools wheel twine
+      run: pip install -U poetry
 
-    - name: Build source dist
-      run: python setup.py sdist
-
-    - name: Build wheel
-      run: python setup.py bdist_wheel
+    - name: Build distribution
+      run: poetry build
 
     - name: Save archive
       uses: actions/upload-artifact@v1
