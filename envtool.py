@@ -1,13 +1,17 @@
+"""
+Environment management tool to instantiate Conda from Flit.
+"""
+
 import os
 import sys
 import tempfile
 import subprocess
 from pathlib import Path
-import platform
 import argparse
 from flit_core.config import read_flit_config, toml
 from packaging.requirements import Requirement
 from packaging.markers import default_environment
+
 
 def write_env(obj, out):
     try:
@@ -78,6 +82,7 @@ def dep_str(cfg, req):
 
 def conda_env(args, pyp, flp):
     cfg = conda_config(pyp)
+    conda_extras = cfg.get('extra', {})
     mkenv = marker_env(args)
     name = args.name
     if name is None:
@@ -103,27 +108,16 @@ def conda_env(args, pyp, flp):
         extras |= set(args.extra)
 
     for e in extras:
-        if e not in flp.reqs_by_extra: continue
-
-        for req in flp.reqs_by_extra[e]:
+        for req in flp.reqs_by_extra.get(e, []):
             req = Requirement(req)
             if req_active(mkenv, req):
                 deps.append(dep_str(cfg, req))
+        for cr in conda_extras.get(e, []):
+            deps.append(str(cr))
 
     env['dependencies'] = deps
 
     return env
-
-
-def create_env(env):
-    from conda.cli.python_api import run_command
-    with tempfile.TemporaryDirectory() as td:
-        path = Path(td)
-        ef = path / 'environment.yml'
-        with ef.open('w') as f:
-            write_env(env, f)
-
-        run_command('env', 'create', '-f', os.fspath(ef), stdout=None, stderr=None)
 
 
 def env_command(env, cmd):
