@@ -22,14 +22,9 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: Install environment
-      run: |
-        pip install -U setuptools wheel
-
     - name: Prep Pip caching
       id: pip-cache
       run: |
-        python setup.py egg_info
         echo "::set-output name=dir::$(pip cache dir)"
       shell: bash
 
@@ -39,9 +34,13 @@ jobs:
         path: ${{ steps.pip-cache.outputs.dir }}
         key: py38-lint-pip-${{ hashFiles('*.egg-info/requires.txt')}}
 
+    - name: Install environment
+      run: |
+        pip install -U flit
+
     - name: Install package
       run: |
-        pip install -e '.[dev]'
+        flit install --pth-file --extras dev
 
     - name: Run lint
       run: |
@@ -79,14 +78,9 @@ jobs:
       with:
         python-version: ${{matrix.python}}
 
-    - name: Install environment
-      run: |
-        pip install -U setuptools wheel
-
     - name: Prep Pip cache
       id: pip-cache
       run: |
-        python setup.py egg_info
         echo "::set-output name=dir::$(pip cache dir)"
       shell: bash
 
@@ -96,9 +90,13 @@ jobs:
         path: ${{ steps.pip-cache.outputs.dir }}
         key: ${{ matrix.platform }}-py${{ matrix.python }}-pip-${{ hashFiles('*.egg-info/requires.txt')}}
 
+    - name: Install environment
+      run: |
+        pip install -U flit
+
     - name: Install package
       run: |
-        pip install -e '.[dev,test,blosc,numcodecs]'
+        flit install --pth-file --extras all
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
@@ -120,14 +118,9 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: Install environment
-      run: |
-        pip install -U setuptools wheel
-
     - name: Get Pip cache dir
       id: pip-cache
       run: |
-        python setup.py egg_info
         echo "::set-output name=dir::$(pip cache dir)"
       shell: bash
 
@@ -137,9 +130,13 @@ jobs:
         path: ${{ steps.pip-cache.outputs.dir }}
         key: no-extras-pip-${{ hashFiles('*.egg-info/requires.txt')}}
 
+    - name: Install environment
+      run: |
+        pip install -U flit
+
     - name: Install package
       run: |
-        pip install -e '.[dev,test]'
+        flit install --pth-file --extras dev,test
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
@@ -166,13 +163,10 @@ jobs:
         python-version: 3.8
 
     - name: Install Python deps
-      run: pip install -U pip setuptools wheel twine
+      run: pip install -U flit
 
-    - name: Build source dist
-      run: python setup.py sdist
-
-    - name: Build wheel
-      run: python setup.py bdist_wheel
+    - name: Build distribution
+      run: flit build
 
     - name: Save archive
       uses: actions/upload-artifact@v1
@@ -186,9 +180,9 @@ jobs:
     - name: Publish PyPI packages
       if: github.event_name == 'release'
       run: |
-        twine upload dist/binpickle*.tar.gz dist/binpickle*.whl
+        flit publish
       shell: bash
       env:
         TWINE_NON_INTERACTIVE: y
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.TWINE_TOKEN }}
+        FLIT_USERNAME: __token__
+        FLIT_PASSWORD: ${{ secrets.TWINE_TOKEN }}

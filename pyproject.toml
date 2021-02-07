@@ -1,3 +1,48 @@
 [build-system]
-requires = ["setuptools>=40.9.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "binpickle"
+author = "Michael Ekstrand"
+author-email = "michaelekstrand@boisestate.edu"
+home-page = "https://binpickle.lenskit.org"
+classifiers = ["License :: OSI Approved :: MIT License"]
+description-file = "README.md"
+requires-python = ">= 3.6.1"
+requires = [
+    "msgpack >= 1.0",
+    "pickle5; python_version < '3.8'"
+]
+
+[tool.flit.metadata.urls]
+GitHub = "https://github.com/lenskit/binpickle"
+
+[tool.flit.metadata.requires-extra]
+blosc = [ "blosc" ]
+numcodecs = [ "numcodecs >= 0.7" ]
+test = [
+    "pytest >= 5",
+    "pytest-cov",
+    "hypothesis >= 6",
+    "pandas >= 1.0",
+    "numpy >= 1.17"
+]
+doc = ["sphinx"]
+dev = [
+    "flake8",
+    "rstcheck"
+]
+
+[tools.flit.sdist]
+include = ["tests/*"]
+exclude = [
+    ".github"
+]
+
+[tool.envtool.conda]
+name = "binpickle"
+channels = ["conda-forge"]
+
+[tool.envtool.conda.rename]
+msgpack = "msgpack-python"
