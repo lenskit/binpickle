@@ -44,5 +44,5 @@ exclude = [
 name = "binpickle"
 channels = ["conda-forge"]
 
-[tool.envtool.conda.rename]
+[tool.envtool.conda.overrides]
 msgpack = "msgpack-python"
