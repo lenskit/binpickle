@@ -97,8 +97,8 @@ class BinPickler:
         tot_enc = sum(e.enc_length for e in self.entries)
         tot_dec = sum(e.dec_length for e in self.entries)
         _log.info('pickled %d bytes with %d buffers totaling %s (%s encoded)',
-                   buf.nbytes, len(self.entries),
-                   human_size(tot_dec), human_size(tot_enc))
+                  buf.nbytes, len(self.entries),
+                  human_size(tot_dec), human_size(tot_enc))
         self._write_buffer(buf)
         self._finish_file()
 
