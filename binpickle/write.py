@@ -1,4 +1,5 @@
 import mmap
+from typing import List
 import warnings
 import logging
 import io
@@ -8,6 +9,7 @@ import msgpack
 from .compat import pickle
 from .format import FileHeader, FileTrailer, IndexEntry
 from . import codecs
+from ._util import human_size
 
 _log = logging.getLogger(__name__)
 
@@ -63,6 +65,7 @@ class BinPickler:
             that takes a buffer and returns the codec to use for that buffer (to
             use different codecs for different types or sizes of buffers).
     """
+    entries: List[IndexEntry]
 
     def __init__(self, filename, *, align=False, codec=None):
         self.filename = filename
@@ -90,7 +93,12 @@ class BinPickler:
                             buffer_callback=self._write_buffer)
         pk.dump(obj)
         buf = bio.getbuffer()
-        _log.info('pickled %d bytes with %d buffers', buf.nbytes, len(self.entries))
+
+        tot_enc = sum(e.enc_length for e in self.entries)
+        tot_dec = sum(e.dec_length for e in self.entries)
+        _log.info('pickled %d bytes with %d buffers totaling %s (%s encoded)',
+                   buf.nbytes, len(self.entries),
+                   human_size(tot_dec), human_size(tot_enc))
         self._write_buffer(buf)
         self._finish_file()
 
