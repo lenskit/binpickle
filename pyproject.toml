@@ -1,26 +1,42 @@
 [build-system]
-requires = ["flit_core >=2,<4"]
+requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
-[tool.flit.metadata]
-module = "binpickle"
-author = "Michael Ekstrand"
-author-email = "michaelekstrand@boisestate.edu"
-home-page = "https://binpickle.lenskit.org"
-classifiers = ["License :: OSI Approved :: MIT License"]
-description-file = "README.md"
-requires-python = ">= 3.6.1"
-requires = [
+[project]
+name = "binpickle"
+authors = [
+    {name = "Michael Ekstrand", email = "michaelekstrand@boisestate.edu"}
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Operating System :: OS Independent",
+]
+readme = "README.md"
+license = { file = "LICENSE" }
+dynamic = ['version', 'description']
+requires-python = ">= 3.6"
+dependencies = [
     "msgpack >= 1.0",
     "pickle5; python_version < '3.8'"
 ]
 
-[tool.flit.metadata.urls]
-GitHub = "https://github.com/lenskit/binpickle"
+[project.urls]
+homepage = "https://binpickle.lenskit.org"
+source = "https://github.com/lenskit/binpickle"
 
-[tool.flit.metadata.requires-extra]
-blosc = [ "blosc" ]
-numcodecs = [ "numcodecs >= 0.7" ]
+[project.optional-dependencies]
+blosc = [
+    "blosc"
+]
+numcodecs = [
+    "numcodecs >= 0.7"
+]
 test = [
     "pytest >= 5",
     "pytest-cov",
@@ -28,10 +44,13 @@ test = [
     "pandas >= 1.0",
     "numpy >= 1.17"
 ]
-doc = ["sphinx"]
+doc = [
+    "sphinx"
+]
 dev = [
     "flake8",
-    "rstcheck"
+    "rstcheck",
+    "flit >=3.2",
 ]
 
 [tools.flit.sdist]
@@ -40,9 +59,7 @@ exclude = [
     ".github"
 ]
 
-[tool.envtool.conda]
-name = "binpickle"
-channels = ["conda-forge"]
-
-[tool.envtool.conda.overrides]
-msgpack = "msgpack-python"
+[tool.conda-lock]
+channels = [
+    "conda-forge"
+]
