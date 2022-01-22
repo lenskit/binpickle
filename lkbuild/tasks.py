@@ -18,6 +18,7 @@ DATA_DIR = Path('data')
 BIBTEX_URL = 'https://paperpile.com/eb/YdOlWmnlit'
 BIBTEX_FILE = Path('docs/lenskit.bib')
 
+
 @task(iterable=['extras', 'mixins'])
 def dev_lock(c, platform=None, extras=None, version=None, blas=None, mixins=None, env_file=False):
     "Create a development lockfile"
