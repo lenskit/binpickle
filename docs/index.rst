@@ -50,3 +50,15 @@ memory-mapping numpy buffers.  By building on top of Pickle Protocol 5, we are a
 obtain the same functionality without hacking the pickle serialization protocol.
 
 .. _`joblib`: https://github.com/joblib/joblib
+
+Acknowledgements
+----------------
+
+This material is based upon work supported by the National Science Foundation under
+Grant No. `IIS 17-51278`_. Any
+opinions, findings, and conclusions or recommendations expressed in this material
+are those of the author(s) and do not necessarily reflect the views of the
+National Science Foundation.  This page has not been approved by
+Boise State University and does not reflect official university positions.
+
+.. _`IIS 17-51278`: https://md.ekstrandom.net/research/career
