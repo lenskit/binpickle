@@ -44,7 +44,8 @@ test = [
     "numpy >= 1.17"
 ]
 doc = [
-    "sphinx"
+    "sphinx >=4",
+    "furo",
 ]
 dev = [
     "flake8",
