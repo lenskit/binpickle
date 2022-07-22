@@ -73,30 +73,12 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Set up Python ${{matrix.python}}
-      uses: actions/setup-python@v2
+    - name: Set up Python and environment
+      uses: lenskit/lkbuild/actions/setup-vanilla-env@main
       with:
         python-version: ${{matrix.python}}
-
-    - name: Prep Pip cache
-      id: pip-cache
-      run: |
-        echo "::set-output name=dir::$(pip cache dir)"
-      shell: bash
-
-    - name: Cache Pip wheels
-      uses: actions/cache@v1
-      with:
-        path: ${{ steps.pip-cache.outputs.dir }}
-        key: ${{ matrix.platform }}-py${{ matrix.python }}-pip-${{ hashFiles('*.egg-info/requires.txt')}}
-
-    - name: Install environment
-      run: |
-        pip install -U flit
-
-    - name: Install package
-      run: |
-        flit install --pth-file --extras all
+        install-with: flit
+        extras: all
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
@@ -113,30 +95,11 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Set up Python ${{matrix.python}}
-      uses: actions/setup-python@v2
+    - name: Set up Python
+      uses: lenskit/lkbuild/actions/setup-vanilla-env@main
       with:
         python-version: 3.8
-
-    - name: Get Pip cache dir
-      id: pip-cache
-      run: |
-        echo "::set-output name=dir::$(pip cache dir)"
-      shell: bash
-
-    - name: Cache Pip wheels
-      uses: actions/cache@v1
-      with:
-        path: ${{ steps.pip-cache.outputs.dir }}
-        key: no-extras-pip-${{ hashFiles('*.egg-info/requires.txt')}}
-
-    - name: Install environment
-      run: |
-        pip install -U flit
-
-    - name: Install package
-      run: |
-        flit install --pth-file --extras dev,test
+        install-with: flit
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
