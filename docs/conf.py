@@ -35,6 +35,7 @@ templates_path = ['_templates']
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'numba': ('https://numba.readthedocs.io/en/stable/', None),
+    'numcodecs': ('https://numcodecs.readthedocs.io/en/stable/', None),
 }
 
 autodoc_default_options = {
