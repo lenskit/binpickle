@@ -53,13 +53,11 @@ dev = [
     "flit >=3.2",
 ]
 
-[tools.flit.sdist]
+[tool.flit.sdist]
 include = ["tests/*"]
 exclude = [
     ".github"
 ]
 
-[tool.conda-lock]
-channels = [
-    "conda-forge"
-]
+[tool.pyproject2conda]
+channels = ["conda-forge"]
