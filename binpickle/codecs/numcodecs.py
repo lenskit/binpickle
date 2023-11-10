@@ -6,6 +6,7 @@ def is_numcodec(codec):
     "Test whether a codec is a NumCodecs codec."
     if NC.AVAILABLE:
         import numcodecs
+
         return isinstance(codec, numcodecs.abc.Codec)
     else:
         return False  # if numcodecs aren't available, it can't be one
@@ -15,12 +16,14 @@ class NC(Codec):
     """
     NumCodec wrapper.
     """
-    NAME = 'numcodec'
-    AVAILABLE = find_spec('numcodecs') is not None
+
+    NAME = "numcodec"
+    AVAILABLE = find_spec("numcodecs") is not None
 
     def __init__(self, codec=None, **kwargs):
         if codec is None:
             import numcodecs
+
             self.codec = numcodecs.get_codec(kwargs)
         else:
             self.codec = codec

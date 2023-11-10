@@ -78,13 +78,13 @@ def get_codec(name, config):
     if name is None:
         return Null()
     elif name in CODECS:
-        _log.debug('configuring %s: %s', name, config)
+        _log.debug("configuring %s: %s", name, config)
         return CODECS[name](**config)
     else:
-        raise ValueError(f'unknown codec {name}')
+        raise ValueError(f"unknown codec {name}")
 
 
-from .chain import Chain   # noqa: E402
+from .chain import Chain  # noqa: E402
 
 register(Null)
 register(Chain)

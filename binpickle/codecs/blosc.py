@@ -11,7 +11,7 @@ _log = logging.getLogger(__name__)
 
 def _split_blocks(buf, blocksize):
     if buf.itemsize > 1:
-        buf = buf.cast('B')
+        buf = buf.cast("B")
     length = buf.nbytes
     chunks = []
     for start in range(0, length, blocksize):
@@ -21,7 +21,7 @@ def _split_blocks(buf, blocksize):
         chunks.append(buf[start:end])
 
     if not chunks:
-        chunks.append(memoryview(b''))
+        chunks.append(memoryview(b""))
     return chunks
 
 
@@ -30,13 +30,12 @@ class Blosc(Codec):
     Blosc codec.
     """
 
-    NAME = 'blosc'
-    AVAILABLE = find_spec('blosc') is not None
+    NAME = "blosc"
+    AVAILABLE = find_spec("blosc") is not None
 
-    def __init__(self, name='blosclz', level=9,
-                 shuffle=1, blocksize=DEFAULT_BLOCKSIZE):
+    def __init__(self, name="blosclz", level=9, shuffle=1, blocksize=DEFAULT_BLOCKSIZE):
         if not self.AVAILABLE:
-            raise ImportError('blosc is not available')
+            raise ImportError("blosc is not available")
         self.name = name
         self.level = level
         self.shuffle = shuffle
@@ -45,22 +44,28 @@ class Blosc(Codec):
     def encode_to(self, buf, out):
         # We have to encode by chunks
         import blosc
+
         pack = msgpack.Packer()
         mv = memoryview(buf)
-        _log.debug('encoding %d bytes (itemsize=%d, format=%s)',
-                   mv.nbytes, mv.itemsize, mv.format)
-        _log.debug('splitting with block size %d', self.blocksize)
+        _log.debug("encoding %d bytes (itemsize=%d, format=%s)", mv.nbytes, mv.itemsize, mv.format)
+        _log.debug("splitting with block size %d", self.blocksize)
         blocks = _split_blocks(mv, self.blocksize)
         out.write(pack.pack_array_header(len(blocks)))
         for block in blocks:
             assert block.nbytes <= self.blocksize
-            comp = blosc.compress(block, cname=self.name, clevel=self.level,
-                                  shuffle=self.shuffle, typesize=mv.itemsize)
+            comp = blosc.compress(
+                block,
+                cname=self.name,
+                clevel=self.level,
+                shuffle=self.shuffle,
+                typesize=mv.itemsize,
+            )
             out.write(pack.pack(comp))
             block.release()
 
     def decode_to(self, buf, out):
         import blosc
+
         blocks = msgpack.unpackb(buf, use_list=True)
         pos = 0
         for block in blocks:
@@ -77,8 +82,4 @@ class Blosc(Codec):
             del out[pos:]
 
     def config(self):
-        return {
-            'name': self.name,
-            'level': self.level,
-            'shuffle': self.shuffle
-        }
+        return {"name": self.name, "level": self.level, "shuffle": self.shuffle}

@@ -8,7 +8,7 @@ class GZ(Codec):
     Zlib (gzip-compatible) codec.
     """
 
-    NAME = 'gz'
+    NAME = "gz"
 
     def __init__(self, level=9):
         self.level = level
@@ -27,6 +27,4 @@ class GZ(Codec):
         out[:] = self.decode(buf)
 
     def config(self):
-        return {
-            'level': self.level
-        }
+        return {"level": self.level}
