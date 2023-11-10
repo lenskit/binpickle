@@ -80,8 +80,8 @@ class FileTrailer(NamedTuple):
     @classmethod
     def decode(cls, buf, *, verify=True):
         "Decode a file trailer from bytes."
-        o, l, c = TRAILER_FORMAT.unpack(buf)
-        return cls(o, l, c)
+        off, len, ck = TRAILER_FORMAT.unpack(buf)
+        return cls(off, len, ck)
 
 
 class IndexEntry(NamedTuple):
