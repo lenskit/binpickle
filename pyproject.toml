@@ -47,7 +47,7 @@ doc = [
     "furo",
 ]
 dev = [
-    "flake8",
+    "ruff ==0.1.*",
     "rstcheck",
     "flit >=3.2",
 ]
