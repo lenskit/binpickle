@@ -36,19 +36,17 @@ def test_size_round_trip():
 
 def test_catch_bad_magic():
     with raises(ValueError) as exc:
-        FileHeader.decode(b'BNPQ\x00\x00\x00\x00' + (b'\x00' * 8))
-    assert 'magic' in str(exc.value)
+        FileHeader.decode(b"BNPQ\x00\x00\x00\x00" + (b"\x00" * 8))
+    assert "magic" in str(exc.value)
 
 
 def test_catch_bad_version():
     with raises(ValueError) as exc:
-        FileHeader.decode(b'BPCK\x00\x02\x00\x00' + (b'\x00' * 8))
-    assert 'version' in str(exc.value)
+        FileHeader.decode(b"BPCK\x00\x02\x00\x00" + (b"\x00" * 8))
+    assert "version" in str(exc.value)
 
 
 def test_catch_bad_padding():
     with raises(ValueError) as exc:
-        FileHeader.decode(b'BPCK\x00\x01\x00\xff' + (b'\x00' * 8))
-    assert 'padding' in str(exc.value)
-
-
+        FileHeader.decode(b"BPCK\x00\x01\x00\xff" + (b"\x00" * 8))
+    assert "padding" in str(exc.value)

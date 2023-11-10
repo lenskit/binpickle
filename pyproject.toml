@@ -47,7 +47,7 @@ doc = [
     "furo",
 ]
 dev = [
-    "flake8",
+    "ruff ==0.1.*",
     "rstcheck",
     "flit >=3.2",
 ]
@@ -56,6 +56,17 @@ dev = [
 include = ["tests/*"]
 exclude = [
     ".github"
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+exclude = [
+    ".git",
+    "__pycache__",
+    "docs/conf.py",
+    "build",
+    "dist",
 ]
 
 [tool.pyproject2conda]

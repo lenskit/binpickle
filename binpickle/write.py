@@ -65,12 +65,13 @@ class BinPickler:
             that takes a buffer and returns the codec to use for that buffer (to
             use different codecs for different types or sizes of buffers).
     """
+
     entries: List[IndexEntry]
 
     def __init__(self, filename, *, align=False, codec=None):
         self.filename = filename
         self.align = align
-        self._file = open(filename, 'wb')
+        self._file = open(filename, "wb")
         self.entries = []
         self.codec = codec
 
@@ -89,16 +90,21 @@ class BinPickler:
     def dump(self, obj):
         "Dump an object to the file. Can only be called once."
         bio = io.BytesIO()
-        pk = pickle.Pickler(bio, protocol=pickle.HIGHEST_PROTOCOL,
-                            buffer_callback=self._write_buffer)
+        pk = pickle.Pickler(
+            bio, protocol=pickle.HIGHEST_PROTOCOL, buffer_callback=self._write_buffer
+        )
         pk.dump(obj)
         buf = bio.getbuffer()
 
         tot_enc = sum(e.enc_length for e in self.entries)
         tot_dec = sum(e.dec_length for e in self.entries)
-        _log.info('pickled %d bytes with %d buffers totaling %s (%s encoded)',
-                  buf.nbytes, len(self.entries),
-                  human_size(tot_dec), human_size(tot_enc))
+        _log.info(
+            "pickled %d bytes with %d buffers totaling %s (%s encoded)",
+            buf.nbytes,
+            len(self.entries),
+            human_size(tot_dec),
+            human_size(tot_enc),
+        )
         self._write_buffer(buf)
         self._finish_file()
 
@@ -116,9 +122,9 @@ class BinPickler:
     def _init_header(self):
         pos = self._file.tell()
         if pos > 0:
-            warnings.warn('BinPickler not at beginning of file')
+            warnings.warn("BinPickler not at beginning of file")
         h = FileHeader()
-        _log.debug('initializing header for %s', self.filename)
+        _log.debug("initializing header for %s", self.filename)
         self._file.write(h.encode())
         assert self._file.tell() == pos + 16
 
@@ -126,7 +132,7 @@ class BinPickler:
         if self.codec is None:
             out.write(buf)
             return None
-        elif hasattr(self.codec, '__call__'):
+        elif hasattr(self.codec, "__call__"):
             # codec is callable, call it to get the codec
             codec = self.codec(buf)
             codec = codecs.make_codec(codec)
@@ -144,31 +150,35 @@ class BinPickler:
             off2 = _align_pos(offset)
             if off2 > offset:
                 nzeds = off2 - offset
-                zeds = b'\x00' * nzeds
+                zeds = b"\x00" * nzeds
                 self._file.write(zeds)
                 assert self._file.tell() == off2
                 offset = off2
 
         length = mv.nbytes
 
-        _log.debug('writing %d bytes at position %d', length, offset)
+        _log.debug("writing %d bytes at position %d", length, offset)
         cko = CKOut(self._file)
         c_spec = self._encode_buffer(buf, cko)
-        _log.debug('encoded %d bytes to %d (%.2f%% saved)', length, cko.bytes,
-                   (length - cko.bytes) / length * 100 if length else -0.0)
-        _log.debug('used codec %s', c_spec)
+        _log.debug(
+            "encoded %d bytes to %d (%.2f%% saved)",
+            length,
+            cko.bytes,
+            (length - cko.bytes) / length * 100 if length else -0.0,
+        )
+        _log.debug("used codec %s", c_spec)
 
         assert self._file.tell() == offset + cko.bytes
 
-        self.entries.append(IndexEntry(offset, cko.bytes, length, cko.checksum,
-                                       c_spec))
+        self.entries.append(IndexEntry(offset, cko.bytes, length, cko.checksum, c_spec))
 
     def _write_index(self):
         buf = msgpack.packb([e.to_repr() for e in self.entries])
         pos = self._file.tell()
         nbs = len(buf)
-        _log.debug('writing %d index entries (%d bytes) at position %d',
-                   len(self.entries), nbs, pos)
+        _log.debug(
+            "writing %d index entries (%d bytes) at position %d", len(self.entries), nbs, pos
+        )
         self._file.write(buf)
         ft = FileTrailer(pos, nbs, adler32(buf))
         self._file.write(ft.encode())
@@ -178,7 +188,7 @@ class BinPickler:
         self._write_index()
 
         pos = self._file.tell()
-        _log.debug('finalizing file with length %d', pos)
+        _log.debug("finalizing file with length %d", pos)
         h = FileHeader(length=pos)
         self._file.seek(0)
         self._file.write(h.encode())

@@ -5,10 +5,10 @@ Constants and functions defining the binpickle format.
 import struct
 from typing import NamedTuple
 
-MAGIC = b'BPCK'
+MAGIC = b"BPCK"
 VERSION = 1
-HEADER_FORMAT = struct.Struct('!4sHHq')
-TRAILER_FORMAT = struct.Struct('!QLL')
+HEADER_FORMAT = struct.Struct("!4sHHq")
+TRAILER_FORMAT = struct.Struct("!QLL")
 
 
 class FileHeader(NamedTuple):
@@ -21,6 +21,7 @@ class FileHeader(NamedTuple):
     3. File length (8 bytes, big-endian).  Length is signed; if the file length is not known,
        this field is set to -1.
     """
+
     version: int = VERSION
     "The NumPy file version."
     length: int = -1
@@ -35,11 +36,11 @@ class FileHeader(NamedTuple):
         "Decode a file header from bytes."
         m, v, pad, off = HEADER_FORMAT.unpack(buf)
         if verify and m != MAGIC:
-            raise ValueError('invalid magic {}'.format(m))
+            raise ValueError("invalid magic {}".format(m))
         if verify and v != VERSION:
-            raise ValueError('invalid version {}'.format(v))
+            raise ValueError("invalid version {}".format(v))
         if verify and pad != 0:
-            raise ValueError('invalid padding')
+            raise ValueError("invalid padding")
         return cls(v, off)
 
     @classmethod
@@ -52,7 +53,7 @@ class FileHeader(NamedTuple):
         if self.length >= HEADER_FORMAT.size + TRAILER_FORMAT.size:
             return self.length - TRAILER_FORMAT.size
         elif self.length > 0:
-            raise ValueError('file size {} not enough for BinPickle'.format(self.length))
+            raise ValueError("file size {} not enough for BinPickle".format(self.length))
         else:
             return None  # We do not know the file size
 
@@ -79,14 +80,15 @@ class FileTrailer(NamedTuple):
     @classmethod
     def decode(cls, buf, *, verify=True):
         "Decode a file trailer from bytes."
-        o, l, c = TRAILER_FORMAT.unpack(buf)
-        return cls(o, l, c)
+        off, len, ck = TRAILER_FORMAT.unpack(buf)
+        return cls(off, len, ck)
 
 
 class IndexEntry(NamedTuple):
     """
     Index entry for a buffer in the BinPickle index.
     """
+
     offset: int
     "The position in the file where the buffer begins (bytes)."
     enc_length: int

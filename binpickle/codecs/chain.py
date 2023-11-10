@@ -7,7 +7,8 @@ class Chain(Codec):
     Codec that chains together other codecs in sequence.  The codecs are applied
     in the provided order for encoding, and reverse order for decoding.
     """
-    NAME = 'chain'
+
+    NAME = "chain"
 
     def __init__(self, codecs=()):
         self.codecs = [make_codec(c, list_is_tuple=True) for c in codecs]
@@ -31,6 +32,4 @@ class Chain(Codec):
         out[:] = self.decode(buf)
 
     def config(self):
-        return {
-            'codecs': [(c.NAME, c.config()) for c in self.codecs]
-        }
+        return {"codecs": [(c.NAME, c.config()) for c in self.codecs]}

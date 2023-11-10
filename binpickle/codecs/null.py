@@ -5,7 +5,8 @@ class Null(Codec):
     """
     Null codec (passthrough).
     """
-    NAME = 'null'
+
+    NAME = "null"
 
     def encode(self, buf):
         return buf

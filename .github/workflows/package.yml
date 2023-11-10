@@ -7,6 +7,10 @@ on:
     types: [created,published]
   pull_request:
 
+concurrency:
+  group: test-${{github.ref}}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Check Source Style
@@ -17,38 +21,16 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Set up Python ${{matrix.python}}
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-
-    - name: Prep Pip caching
-      id: pip-cache
+    - name: Check source code
       run: |
-        echo "::set-output name=dir::$(pip cache dir)"
-      shell: bash
-
-    - name: Cache Pip wheels
-      uses: actions/cache@v1
-      with:
-        path: ${{ steps.pip-cache.outputs.dir }}
-        key: py38-lint-pip-${{ hashFiles('*.egg-info/requires.txt')}}
-
-    - name: Install environment
-      run: |
-        pip install -U flit
-
-    - name: Install package
-      run: |
-        flit install --pth-file --extras dev
-
-    - name: Run lint
-      run: |
-        # Flake8 problem matcher & transform regex from https://github.com/TrueBrain/actions-flake8
-        echo "::add-matcher::.github/flake8-matcher.json"
-        set -o pipefail
-        flake8 |sed -r 's/: ([^W][0-9][0-9][0-9])/: error: \1/;s/: (W[0-9][0-9][0-9])/: warning: \1/'
-        echo "::remove-matcher owner=flake8::"
+        status=0
+        if ! pipx run ruff check --output-format=github binpickle; then
+          status=1
+        fi
+        pipx run ruff format --diff binpickle
+        if [ $status -ne 0 ]; then
+          exit $status
+        fi
 
   test:
     name: Test with Python ${{matrix.python}} on ${{matrix.platform}}

@@ -6,13 +6,16 @@ import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays, integer_dtypes, floating_dtypes
 
 from binpickle.codecs import *
+
 if NC.AVAILABLE:
     from numcodecs import LZ4, LZMA
 
-KNOWN_CODECS = [c for c in CODECS.values() if c.NAME != 'numcodec']  # exclude numcodec from common tests
+KNOWN_CODECS = [
+    c for c in CODECS.values() if c.NAME != "numcodec"
+]  # exclude numcodec from common tests
 
-need_blosc = pytest.mark.skipif(not Blosc.AVAILABLE, reason='Blosc not available')
-need_numcodecs = pytest.mark.skipif(not NC.AVAILABLE, reason='numcodecs not available')
+need_blosc = pytest.mark.skipif(not Blosc.AVAILABLE, reason="Blosc not available")
+need_numcodecs = pytest.mark.skipif(not NC.AVAILABLE, reason="numcodecs not available")
 
 
 def test_make_codec_none():
@@ -20,11 +23,11 @@ def test_make_codec_none():
 
 
 def test_make_codec_null_str():
-    assert isinstance(make_codec('null'), Null)
+    assert isinstance(make_codec("null"), Null)
 
 
 def test_make_codec_gz_str():
-    assert isinstance(make_codec('gz'), GZ)
+    assert isinstance(make_codec("gz"), GZ)
 
 
 def test_make_codec_return():
@@ -52,38 +55,38 @@ def test_get_null_with_none():
 
 
 def test_get_null():
-    codec = get_codec('null', {})
+    codec = get_codec("null", {})
     assert isinstance(codec, Null)
 
 
 def test_get_gz():
-    codec = get_codec('gz', {})
+    codec = get_codec("gz", {})
     assert isinstance(codec, GZ)
     assert codec.level == 9
 
 
 def test_get_gz_level():
-    codec = get_codec('gz', {'level': 5})
+    codec = get_codec("gz", {"level": 5})
     assert isinstance(codec, GZ)
     assert codec.level == 5
 
 
 @need_blosc
 def test_get_blosc():
-    codec = get_codec('blosc', {})
+    codec = get_codec("blosc", {})
     assert isinstance(codec, Blosc)
     assert codec.level == 9
 
 
 @need_blosc
 def test_get_blosc_lvl():
-    codec = get_codec('blosc', {'name': 'zstd', 'level': 5})
+    codec = get_codec("blosc", {"name": "zstd", "level": 5})
     assert isinstance(codec, Blosc)
-    assert codec.name == 'zstd'
+    assert codec.name == "zstd"
     assert codec.level == 5
 
 
-@pytest.mark.parametrize('codec', KNOWN_CODECS)
+@pytest.mark.parametrize("codec", KNOWN_CODECS)
 @settings(deadline=500)
 @given(st.binary())
 def test_codec_roundtrip(codec, data):
@@ -96,10 +99,9 @@ def test_codec_roundtrip(codec, data):
     assert dec == data
 
 
-@pytest.mark.parametrize('codec', KNOWN_CODECS)
+@pytest.mark.parametrize("codec", KNOWN_CODECS)
 @settings(deadline=500)
-@given(arrays(st.one_of(integer_dtypes(), floating_dtypes()),
-              st.integers(10, 10000)))
+@given(arrays(st.one_of(integer_dtypes(), floating_dtypes()), st.integers(10, 10000)))
 def test_codec_roundtrip_array(codec, data):
     "Round-trip a codec"
     assume(not any(np.isnan(data)))
@@ -112,7 +114,7 @@ def test_codec_roundtrip_array(codec, data):
     assert all(a2 == data)
 
 
-@pytest.mark.parametrize('codec', KNOWN_CODECS)
+@pytest.mark.parametrize("codec", KNOWN_CODECS)
 def test_codec_decode_oversize(codec):
     "Test decoding data to an oversized bytearray"
     c = codec()
@@ -179,6 +181,7 @@ def test_chain_config():
 
 def test_is_not_numcodec():
     assert not numcodecs.is_numcodec(GZ())
+
 
 @need_numcodecs
 def test_is_numcodec():
