@@ -7,6 +7,10 @@ on:
     types: [created,published]
   pull_request:
 
+concurrency:
+  group: test-${{github.ref}}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Check Source Style
