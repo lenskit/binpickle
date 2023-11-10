@@ -58,5 +58,15 @@ exclude = [
     ".github"
 ]
 
+[tool.ruff]
+line-length = 100
+exclude = [
+    ".git",
+    "__pycache__",
+    "docs/conf.py",
+    "build",
+    "dist",
+]
+
 [tool.pyproject2conda]
 channels = ["conda-forge"]
