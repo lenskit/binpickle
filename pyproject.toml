@@ -32,7 +32,7 @@ blosc = [
     "blosc"
 ]
 numcodecs = [
-    "numcodecs >= 0.7"
+    "numcodecs >= 0.10"
 ]
 test = [
     "pytest >= 5",
