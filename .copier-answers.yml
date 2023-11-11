@@ -1,0 +1,7 @@
+# Changes here will be overwritten by Copier
+_commit: edb515f
+_src_path: https://github.com/lenskit/lk-project-template
+package_name: binpickle
+project_name: binpickle
+require_lint: true
+start_year: 2020

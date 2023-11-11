@@ -5,69 +5,68 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "binpickle"
 authors = [
-    {name = "Michael Ekstrand", email = "michaelekstrand@boisestate.edu"}
+  {name="Michael Ekstrand", email="mdekstrand@drexel.edu"}
 ]
 classifiers = [
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Operating System :: OS Independent",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Operating System :: OS Independent",
 ]
+requires-python = ">= 3.10"
 readme = "README.md"
-license = { file = "LICENSE" }
-dynamic = ['version', 'description']
-requires-python = ">= 3.8"
+dynamic = ["version", "description"]
 dependencies = [
-    "msgpack >= 1.0",
+  "msgpack >= 1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "flit >=3.8",
+  "ruff",
+  "copier",
+]
+test = [
+  "pytest >= 5",
+  "pytest-cov",
+  "hypothesis >= 6",
+  "pandas >= 1.0",
+  "numpy >= 1.17",
+]
+doc = [
+  "sphinx >=4",
+  "furo",
 ]
 
 [project.urls]
-homepage = "https://binpickle.lenskit.org"
-source = "https://github.com/lenskit/binpickle"
+Homepage = "https://binpickle.lenksit.org"
+GitHub = "https://github.com/lenskit/binpickle"
 
-[project.optional-dependencies]
-blosc = [
-    "blosc"
-]
-numcodecs = [
-    "numcodecs >= 0.10"
-]
-test = [
-    "pytest >= 5",
-    "pytest-cov",
-    "hypothesis >= 6",
-    "pandas >= 1.0",
-    "numpy >= 1.17"
-]
-doc = [
-    "sphinx >=4",
-    "furo",
-]
-dev = [
-    "ruff ==0.1.*",
-    "rstcheck",
-    "flit >=3.2",
-]
-
+# configure build tools
 [tool.flit.sdist]
 include = ["tests/*"]
 exclude = [
-    ".github"
+  ".github"
 ]
+
+# need this for the SCM plugins to work
+[tool.setuptools.packages.find]
+exclude = ["envs"]
+
+# settings for generating conda environments for dev & CI, when needed
+[tool.pyproject2conda]
+channels = ["conda-forge"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py38"
+target-version = "py310"
 exclude = [
-    ".git",
-    "__pycache__",
-    "docs/conf.py",
-    "build",
-    "dist",
+  ".git",
+  "__pycache__",
+  "docs/conf.py",
+  "build",
+  "dist",
 ]
-
-[tool.pyproject2conda]
-channels = ["conda-forge"]
