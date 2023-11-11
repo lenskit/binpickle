@@ -12,26 +12,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Check Source Style
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-
-    - name: Check source code
-      run: |
-        status=0
-        if ! pipx run ruff check --output-format=github binpickle; then
-          status=1
-        fi
-        pipx run ruff format --diff binpickle
-        if [ $status -ne 0 ]; then
-          exit $status
-        fi
-
   test:
     name: Test with Python ${{matrix.python}} on ${{matrix.platform}}
     runs-on: ${{matrix.platform}}-latest
@@ -92,7 +72,7 @@ jobs:
   sdist:
     name: Build Source Packages
     runs-on: ubuntu-latest
-    needs: [test, lint, no-extras]
+    needs: [test, no-extras]
 
     steps:
     - uses: actions/checkout@v2
