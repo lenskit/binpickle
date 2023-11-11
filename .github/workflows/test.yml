@@ -70,7 +70,7 @@ jobs:
     - name: Set up dependencies
       run: |
         pip install -U 'flit>=3.8'
-        flit install --only-deps --deps=none --extras test
+        flit install --only-deps --deps=production --extras test
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
