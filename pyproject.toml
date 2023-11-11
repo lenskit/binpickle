@@ -40,6 +40,12 @@ doc = [
   "sphinx >=4",
   "furo",
 ]
+blosc = [
+  "blosc",
+]
+numcodecs = [
+  "numcodecs >= 0.10",
+]
 
 [project.urls]
 Homepage = "https://binpickle.lenksit.org"
