@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(".."))
 
 import binpickle
 
-project = "BinPickle""
+project = "BinPickle"
 copyright = "2023 Michael Ekstrand"
 author = "Michael D. Ekstrand"
 
