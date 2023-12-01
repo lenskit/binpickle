@@ -2,7 +2,15 @@
 Optimized format for pickling binary data.
 """
 
-__version__ = "0.4.0"
+from importlib.metadata import version, PackageNotFoundError
 
-from .write import dump, BinPickler  # noqa: F401
-from .read import load, BinPickleFile  # noqa: F401
+from .write import dump, BinPickler
+from .read import load, BinPickleFile
+
+try:
+    __version__ = version("progress-api")
+except PackageNotFoundError:
+    # package is not installed
+    pass
+
+__all__ = ["dump", "BinPickler", "load", "BinPickleFile"]
