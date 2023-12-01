@@ -1,9 +1,10 @@
 [build-system]
-requires = ["flit_core >=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "binpickle"
+description = "Optimized format for pickling binary data."
 authors = [
   {name="Michael Ekstrand", email="mdekstrand@drexel.edu"}
 ]
@@ -18,16 +19,19 @@ classifiers = [
 ]
 requires-python = ">= 3.10"
 readme = "README.md"
-dynamic = ["version", "description"]
+license = { file = "LICENSE.md" }
+dynamic = ["version"]
 dependencies = [
   "msgpack >= 1.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-  "flit >=3.8",
+  "setuptools>=64",
+  "setuptools_scm>=8",
   "ruff",
   "copier",
+  "sphinx-autobuild",
 ]
 test = [
   "pytest >= 5",
@@ -37,7 +41,8 @@ test = [
   "numpy >= 1.17",
 ]
 doc = [
-  "sphinx >=4",
+  "sphinx >=4.2",
+  "sphinxext-opengraph >= 0.5",
   "furo",
 ]
 blosc = [
@@ -52,15 +57,11 @@ Homepage = "https://binpickle.lenksit.org"
 GitHub = "https://github.com/lenskit/binpickle"
 
 # configure build tools
-[tool.flit.sdist]
-include = ["tests/*"]
-exclude = [
-  ".github"
-]
+[tool.setuptools]
+packages = ["binpickle"]
 
-# need this for the SCM plugins to work
-[tool.setuptools.packages.find]
-exclude = ["envs"]
+[tool.setuptools_scm]
+version_scheme = "release-branch-semver"
 
 # settings for generating conda environments for dev & CI, when needed
 [tool.pyproject2conda]
