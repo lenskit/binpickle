@@ -8,7 +8,7 @@ from .write import dump, BinPickler
 from .read import load, BinPickleFile
 
 try:
-    __version__ = version("progress-api")
+    __version__ = version("binpickle")
 except PackageNotFoundError:
     # package is not installed
     pass
