@@ -16,7 +16,7 @@ from binpickle import codecs
 
 
 RW_CTORS = [BinPickler, BinPickler.mappable, BinPickler.compressed]
-RW_CODECS = [st.just(None), st.builds(codecs.GZ)]
+RW_CODECS: list[st.SearchStrategy[codecs.Codec | None]] = [st.just(None), st.builds(codecs.GZ)]
 if codecs.Blosc.AVAILABLE:
     RW_CTORS.append(lambda f: BinPickler.compressed(f, codecs.Blosc("zstd", 5)))
     RW_CODECS.append(st.builds(codecs.Blosc))
