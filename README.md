@@ -4,9 +4,9 @@
 ![Test and Build](https://github.com/lenskit/binpickle/workflows/Test%20and%20Package/badge.svg)
 [![codecov](https://codecov.io/gh/lenskit/binpickle/branch/master/graph/badge.svg)](https://codecov.io/gh/lenskit/binpickle)
 
-This package uses the new Pickle Protocol 5 in Python 3.8 (or its `pickle5` backport)
-to efficiently serialize large objects, particularly from scientific Python packages,
-to an on-disk format.  This format is designed to support two use cases:
+This package uses the new Pickle Protocol 5 added in Python 3.8 to efficiently
+serialize large objects, particularly from scientific Python packages, to an
+on-disk format.  This format is designed to support two use cases:
 
 1.  Serializing data-intensive statistical models in a memory-mappable format so
     multiple processes can share the same (read-only) model memory.

@@ -2,9 +2,9 @@ import mmap
 import logging
 import io
 from zlib import adler32
+import pickle
 import msgpack
 
-from .compat import pickle
 from .format import FileHeader, IndexEntry, FileTrailer
 from .codecs import get_codec
 
