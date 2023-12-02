@@ -1,0 +1,3 @@
+from .abc import Codec
+
+def get_codec(config: dict) -> Codec: ...
