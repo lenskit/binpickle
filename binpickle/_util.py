@@ -3,13 +3,13 @@ Internal utility functions for Binpickle.
 """
 
 try:
-    from natural.size import binarysize
+    from humanize import naturalsize
 except ImportError:
-    binarysize = None
+    naturalsize = None
 
 
 def human_size(bytes):
-    if binarysize:
-        return binarysize(bytes)
+    if naturalsize:
+        return naturalsize(bytes, binary=True, format="%.2f")
     else:
         return "{:.2f} MiB".format(bytes / (1024 * 1024))
