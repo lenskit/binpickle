@@ -4,9 +4,9 @@ import warnings
 import logging
 import io
 from zlib import adler32
+import pickle
 import msgpack
 
-from .compat import pickle
 from .format import FileHeader, FileTrailer, IndexEntry
 from . import codecs
 from ._util import human_size
