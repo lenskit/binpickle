@@ -3,7 +3,7 @@ Constants and functions defining the binpickle format.
 """
 
 import struct
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 MAGIC = b"BPCK"
 VERSION = 1
@@ -97,7 +97,7 @@ class IndexEntry(NamedTuple):
     "The decoded length of the buffer in bytes."
     checksum: int
     "The Adler-32 checksum of the encoded buffer data."
-    codec: tuple = None
+    codec: Optional[tuple] = None
     "The codec used to encode the buffer, or None."
 
     def to_repr(self):

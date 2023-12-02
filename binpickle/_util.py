@@ -1,6 +1,10 @@
 """
 Internal utility functions for Binpickle.
 """
+from __future__ import annotations
+from typing import Optional, Any
+
+naturalsize: Optional[Any]
 
 try:
     from humanize import naturalsize
