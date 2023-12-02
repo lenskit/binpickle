@@ -28,6 +28,7 @@ dev = [
   "setuptools>=64",
   "setuptools_scm>=8",
   "ruff",
+  "mypy ~=1.5",
   "copier",
   "sphinx-autobuild",
 ]
