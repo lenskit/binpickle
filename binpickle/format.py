@@ -6,7 +6,7 @@ import struct
 from typing import NamedTuple, Optional
 
 MAGIC = b"BPCK"
-VERSION = 1
+VERSION = 2
 HEADER_FORMAT = struct.Struct("!4sHHq")
 TRAILER_FORMAT = struct.Struct("!QLL")
 
@@ -16,7 +16,7 @@ class FileHeader(NamedTuple):
     File header for a BinPickle file.  The header is a 16-byte sequence containing the
     magic (``BPCK``) followed by version and offset information:
 
-    1. File version (2 bytes, big-endian). Currently only version 1 exists.
+    1. File version (2 bytes, big-endian).
     2. Reserved (2 bytes). Set to 0.
     3. File length (8 bytes, big-endian).  Length is signed; if the file length is not known,
        this field is set to -1.
