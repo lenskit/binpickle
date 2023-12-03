@@ -101,7 +101,7 @@ class BinPickleFile:
             raise ValueError("no file length, corrupt binpickle file?")
 
         buf = self._mv[tpos:]
-        assert len(buf) == 16
+        assert len(buf) == 44
         self.trailer = FileTrailer.decode(buf)
 
         i_start = self.trailer.offset
