@@ -211,6 +211,7 @@ def test_compress_many_arrays(a):
 
         with BinPickleFile(file) as bpf:
             assert not bpf.find_errors()
+            assert not bpf.is_mappable
             assert len(bpf.entries) in (1, 2)
             a2 = bpf.load()
             assert len(a2) == len(a)
@@ -230,6 +231,7 @@ def test_map_many_arrays(a):
 
         with BinPickleFile(file, direct=True) as bpf:
             assert not bpf.find_errors()
+            assert bpf.is_mappable
             assert len(bpf.entries) in (1, 2)
             a2 = bpf.load()
             assert len(a2) == len(a)

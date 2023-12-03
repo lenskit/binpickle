@@ -93,6 +93,11 @@ class BinPickleFile:
         up = pickle.Unpickler(io.BytesIO(p_bytes), buffers=buf_gen)
         return up.load()
 
+    @property
+    def is_mappable(self) -> bool:
+        "Query whether this file can be memory-mapped."
+        return all(not e.codecs for e in self.entries)
+
     def find_errors(self) -> list[str]:
         """
         Verify binpickle data structure validity.  If the file is invalid, returns
