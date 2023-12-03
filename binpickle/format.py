@@ -2,7 +2,7 @@
 Constants and functions defining the binpickle format.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 import struct
 from typing import NamedTuple, TypeAlias
 
@@ -110,7 +110,7 @@ class IndexEntry:
 
     def to_repr(self):
         "Convert an index entry to its MsgPack-compatible representation"
-        return dict((k, getattr(self, k)) for k in self._fields)
+        return dict((f.name, getattr(self, f.name)) for f in fields(self))
 
     @classmethod
     def from_repr(cls, repr):
