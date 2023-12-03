@@ -30,7 +30,7 @@ class FileHeader:
     magic (``BPCK``) followed by version and offset information:
 
     1. File version (2 bytes, big-endian).
-    2. Reserved (2 bytes). Set to 0.
+    2. Flags (2 bytes). Currently no flags are defined, so this is set to 0.
     3. File length (8 bytes, big-endian).  Length is signed; if the file length is not known,
        this field is set to -1.
     """
