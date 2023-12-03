@@ -35,6 +35,7 @@ dev = [
   "sphinx-autobuild",
   "humanize ~=4.0",
   "msgpack-types",
+  "pandas-stubs",
 ]
 test = [
   "pytest >= 5",

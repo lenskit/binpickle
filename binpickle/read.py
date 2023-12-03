@@ -11,6 +11,7 @@ import msgpack
 from binpickle.encode import resolve_codec
 
 from .format import FileHeader, IndexEntry, FileTrailer
+from ._util import hash_buffer
 
 _log = logging.getLogger(__name__)
 
@@ -27,10 +28,13 @@ class BinPickleFile:
             outlast the :class:`BinPickleFile` instance.  If ``False``, they
             are copied from the file and do not need to be freed before
             :meth:`close` is called.
+        verify(bool):
+            If ``True`` (the default), verify file checksums while reading.
     """
 
     filename: str | PathLike
     direct: bool
+    verify: bool
     header: FileHeader
     trailer: FileTrailer
     _map: Optional[mmap.mmap]
@@ -38,9 +42,10 @@ class BinPickleFile:
     _index_buf: Optional[memoryview]
     entries: list[IndexEntry]
 
-    def __init__(self, filename: str | PathLike, *, direct: bool = False):
+    def __init__(self, filename, *, direct: bool = False, verify: bool = True):
         self.filename = filename
         self.direct = direct
+        self.verify = verify
         with open(filename, "rb") as bpf:
             self.header = FileHeader.read(bpf)
             self._map = mmap.mmap(bpf.fileno(), self.header.length, access=mmap.ACCESS_READ)
@@ -123,6 +128,13 @@ class BinPickleFile:
         i_start = self.trailer.offset
         i_end = i_start + self.trailer.length
         self._index_buf = self._mv[i_start:i_end]
+        try:
+            self._verify_buffer(self._index_buf, self.trailer.hash, "index")
+        except Exception as e:
+            self._index_buf.release()
+            self._index_buf = None
+            raise e
+
         self.entries = [IndexEntry.from_repr(e) for e in msgpack.unpackb(self._index_buf)]
         _log.debug("read %d entries from file", len(self.entries))
 
@@ -137,21 +149,36 @@ class BinPickleFile:
         if direct is None:
             direct = self.direct
 
+        buf = self._mv[start:end]
+        try:
+            self._verify_buffer(buf, entry.hash)
+        except Exception as e:
+            # make sure we release the buffer, even if it's captured by the stack trace
+            buf.release()
+            raise e
+
         _log.debug("decoding %d bytes from %d with %s", length, start, entry.codecs)
 
         if decode and entry.codecs:
             codecs = [resolve_codec(c) for c in entry.codecs]
-            out: Buffer = self._mv[start:end]
+            out: Buffer = buf
             for codec in codecs[::-1]:
                 out = codec.decode(out)
             return out
 
         if direct:
             _log.debug("mapping %d bytes from %d", length, start)
-            return self._mv[start:end]
+            return buf
         else:
             _log.debug("copying %d bytes from %d", length, start)
-            return self._map[start:end]
+            return buf.tobytes()
+
+    def _verify_buffer(self, buf: memoryview, hash: bytes, msg: str = "buffer"):
+        if self.verify:
+            _log.debug("verifying %s", msg)
+            bhash = hash_buffer(buf)
+            if bhash != hash:
+                raise ValueError(f"{msg} has incorrect hash, corrupt file?")
 
 
 def load(file: str | PathLike) -> object:
