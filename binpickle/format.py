@@ -3,7 +3,7 @@ Constants and functions defining the binpickle format.
 """
 
 import struct
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 
 MAGIC = b"BPCK"
 VERSION = 1
@@ -16,7 +16,7 @@ class FileHeader(NamedTuple):
     File header for a BinPickle file.  The header is a 16-byte sequence containing the
     magic (``BPCK``) followed by version and offset information:
 
-    1. File version (2 bytes, big-endian). Currently only version 1 exists.
+    1. File version (2 bytes, big-endian).
     2. Reserved (2 bytes). Set to 0.
     3. File length (8 bytes, big-endian).  Length is signed; if the file length is not known,
        this field is set to -1.
@@ -97,7 +97,7 @@ class IndexEntry(NamedTuple):
     "The decoded length of the buffer in bytes."
     checksum: int
     "The Adler-32 checksum of the encoded buffer data."
-    codec: tuple = None
+    codec: Optional[tuple] = None
     "The codec used to encode the buffer, or None."
 
     def to_repr(self):

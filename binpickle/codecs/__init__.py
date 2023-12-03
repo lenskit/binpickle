@@ -7,9 +7,11 @@ such as splitting arrays into blocks.
 .. _numcodecs: https://numcodecs.readthedocs.io/en/stable/
 """
 
-from ._base import Codec  # noqa: F401
+from __future__ import annotations
+
 import logging
 
+from ._base import Codec  # noqa: F401
 from . import null
 from . import gz
 from . import blosc
@@ -17,7 +19,7 @@ from . import numcodecs
 
 _log = logging.getLogger(__name__)
 
-CODECS = {}
+CODECS: dict[str, type[Codec]] = {}
 
 Null = null.Null
 GZ = gz.GZ
@@ -25,11 +27,11 @@ Blosc = blosc.Blosc
 NC = numcodecs.NC
 
 
-def register(cls):
+def register(cls: type[Codec]):
     CODECS[cls.NAME] = cls
 
 
-def make_codec(codec, *, null_as_none=False, list_is_tuple=False):
+def make_codec(codec, *, null_as_none=False, list_is_tuple=False) -> Codec:
     """
     Resolve a codec into a BinPickle-compatible codec.
 

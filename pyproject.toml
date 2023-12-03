@@ -28,8 +28,10 @@ dev = [
   "setuptools>=64",
   "setuptools_scm>=8",
   "ruff",
+  "mypy ~=1.5",
   "copier",
   "sphinx-autobuild",
+  "humanize ~=4.0"
 ]
 test = [
   "pytest >= 5",
@@ -75,3 +77,7 @@ exclude = [
   "build",
   "dist",
 ]
+
+[tool.mypy]
+mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
+exclude = "^docs/"
