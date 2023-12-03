@@ -128,7 +128,12 @@ class BinPickleFile:
         i_start = self.trailer.offset
         i_end = i_start + self.trailer.length
         self._index_buf = self._mv[i_start:i_end]
-        self._verify_buffer(self._index_buf, self.trailer.hash, "index")
+        try:
+            self._verify_buffer(self._index_buf, self.trailer.hash, "index")
+        except Exception as e:
+            self._index_buf.release()
+            self._index_buf = None
+            raise e
 
         self.entries = [IndexEntry.from_repr(e) for e in msgpack.unpackb(self._index_buf)]
         _log.debug("read %d entries from file", len(self.entries))
@@ -145,7 +150,12 @@ class BinPickleFile:
             direct = self.direct
 
         buf = self._mv[start:end]
-        self._verify_buffer(buf, entry.hash)
+        try:
+            self._verify_buffer(buf, entry.hash)
+        except Exception as e:
+            # make sure we release the buffer, even if it's captured by the stack trace
+            buf.release()
+            raise e
 
         _log.debug("decoding %d bytes from %d with %s", length, start, entry.codecs)
 
