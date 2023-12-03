@@ -12,7 +12,7 @@ from typing_extensions import Buffer
 from numcodecs.abc import Codec
 
 from .format import CodecSpec, FileHeader, FileTrailer, IndexEntry
-from .encode import resolve_codec, CodecArg
+from .encode import ResolvedCodec, resolve_codec, CodecArg
 from ._util import human_size
 
 _log = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class BinPickler:
 
     filename: str | PathLike
     align: bool
-    codecs: list[Codec]
+    codecs: list[ResolvedCodec]
     entries: List[IndexEntry]
 
     def __init__(
