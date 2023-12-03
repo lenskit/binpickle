@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+from enum import Enum
 import hashlib
 import mmap
 import logging
@@ -9,12 +11,29 @@ import pickle
 import msgpack
 
 from binpickle.encode import resolve_codec
-from binpickle.errors import FormatError, IntegrityError
+from binpickle.errors import BinPickleError, FormatError, IntegrityError
 
 from .format import FileHeader, IndexEntry, FileTrailer
 from ._util import hash_buffer
 
 _log = logging.getLogger(__name__)
+
+
+class FileStatus(Enum):
+    MISSING = 0
+    INVALID = 1
+    BINPICKLE = 2
+
+
+@dataclass
+class BPKInfo:
+    status: FileStatus
+    size: int
+    mappable: bool
+
+    @property
+    def is_valid(self):
+        return self.status == FileStatus.BINPICKLE
 
 
 class BinPickleFile:
@@ -192,3 +211,18 @@ def load(file: str | PathLike) -> object:
 
     with BinPickleFile(file) as bpf:
         return bpf.load()
+
+
+def file_info(file: str | PathLike) -> BPKInfo:
+    """
+    Test whether a file is a BinPickle file, and if so, return basic information
+    about it.
+    """
+    try:
+        with open(file, "rb") as f:
+            info = FileHeader.read(f)
+            return BPKInfo(FileStatus.BINPICKLE, info.length, False)
+    except FileNotFoundError:
+        return BPKInfo(FileStatus.MISSING, 0, False)
+    except BinPickleError:
+        return BPKInfo(FileStatus.INVALID, 0, False)
