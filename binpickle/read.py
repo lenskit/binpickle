@@ -85,7 +85,7 @@ class BinPickleFile:
             if e.offset < position:
                 errors.append(f"entry {i}: offset {e.offset} before expected start {position}")
             buf = self._read_buffer(e, direct=True)
-            ndec = len(buf)
+            ndec = memoryview(buf).nbytes
             if ndec != e.dec_length:
                 errors.append(f"entry {i}: decoded to {ndec} bytes, expected {e.dec_length}")
             cks = hashlib.sha256(self._read_buffer(e, direct=True, decode=False)).digest()
@@ -127,13 +127,15 @@ class BinPickleFile:
         if direct is None:
             direct = self.direct
 
+        _log.debug("decoding %d bytes from %d with %s", length, start, entry.codecs)
+
         if decode and entry.codecs:
             codecs = [resolve_codec(c) for c in entry.codecs]
-            _log.debug("decoding %d bytes from %d with %s", length, start, entry.codecs)
             out: Buffer = self._mv[start:end]
             for codec in codecs[::-1]:
                 out = codec.decode(out)
             return out
+
         if direct:
             _log.debug("mapping %d bytes from %d", length, start)
             return self._mv[start:end]
