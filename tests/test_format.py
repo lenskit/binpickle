@@ -1,7 +1,7 @@
 from pytest import raises
 
 from binpickle.errors import FormatError
-from binpickle.format import *
+from binpickle.format import FileHeader, FileTrailer, HEADER_FORMAT, TRAILER_FORMAT
 
 
 def test_format_sizes():
