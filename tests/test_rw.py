@@ -31,7 +31,7 @@ RW_CODECS: list[st.SearchStrategy[Codec | str | None]] = [
 ]
 if "blosc" in codec_registry:
     RW_CODECS.append(st.builds(nc.Blosc))
-    RW_CODECS.append(st.builds(nc.Blosc, st.one_of(st.just("zstd"), st.just("snappy"))))
+    RW_CODECS.append(st.builds(nc.Blosc, st.one_of(st.just("zstd"), st.just("lz4"))))
 
 RW_CONFIGS = it.product(RW_CTORS, [False, True])
 RW_PARAMS = ["writer", "direct"]
@@ -85,7 +85,7 @@ def test_write_encoded_arrays(arrays, codec):
     with TemporaryDirectory(".test", "binpickle-") as path:
         file = Path(path) / "data.bpk"
 
-        with BinPickler.compressed(file, codec) as w:
+        with BinPickler(file, codecs=[codec] if codec else []) as w:
             for a in arrays:
                 w._write_buffer(a)
             w._finish_file()
@@ -96,7 +96,7 @@ def test_write_encoded_arrays(arrays, codec):
             for e, a in zip(bpf.entries, arrays):
                 try:
                     if codec is not None:
-                        assert e.codec
+                        assert e.codecs
                     assert e.dec_length == len(a)
                     dat = bpf._read_buffer(e)
                     assert dat == a
