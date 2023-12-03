@@ -9,7 +9,6 @@ import pickle
 import msgpack
 
 from typing_extensions import Buffer
-from numcodecs.abc import Codec
 
 from .format import CodecSpec, FileHeader, FileTrailer, IndexEntry
 from .encode import ResolvedCodec, resolve_codec, CodecArg
@@ -56,7 +55,7 @@ class BinPickler:
 
     def __init__(
         self,
-        filename,
+        filename: str | PathLike,
         *,
         align=False,
         codecs: Optional[list[CodecArg]] = None,
@@ -75,12 +74,12 @@ class BinPickler:
         self._init_header()
 
     @classmethod
-    def mappable(cls, filename):
+    def mappable(cls, filename: str | PathLike):
         "Convenience method to construct a pickler for memory-mapped use."
         return cls(filename, align=True)
 
     @classmethod
-    def compressed(cls, filename, codec: CodecArg = "gzip"):
+    def compressed(cls, filename: str | PathLike, codec: CodecArg = "gzip"):
         "Convenience method to construct a pickler for compressed storage."
         return cls(filename, codecs=[codec])
 
