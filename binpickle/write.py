@@ -129,6 +129,10 @@ class BinPickler:
         self,
         buf: Buffer,
     ) -> tuple[Buffer, list[CodecSpec]]:
+        # fast-path empty buffers
+        if memoryview(buf).nbytes == 0:
+            return b"", []
+
         # resolve any deferred codecs
         codecs = [resolve_codec(c, buf) for c in self.codecs]
 
