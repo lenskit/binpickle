@@ -1,6 +1,5 @@
 import mmap
 from os import PathLike
-from typing import List, Optional
 import warnings
 import logging
 import io
@@ -8,7 +7,7 @@ import hashlib
 import pickle
 import msgpack
 
-from typing_extensions import Buffer
+from typing_extensions import Buffer, List, Optional, Self
 
 from .format import CodecSpec, FileHeader, FileTrailer, IndexEntry
 from .encode import ResolvedCodec, resolve_codec, CodecArg
@@ -17,7 +16,7 @@ from ._util import human_size
 _log = logging.getLogger(__name__)
 
 
-def _align_pos(pos, size=mmap.PAGESIZE):
+def _align_pos(pos: int, size: int = mmap.PAGESIZE) -> int:
     "Advance a position to be aligned."
     rem = pos % size
     if rem:
@@ -52,6 +51,7 @@ class BinPickler:
     align: bool
     codecs: list[ResolvedCodec]
     entries: List[IndexEntry]
+    _file: io.BufferedWriter
 
     def __init__(
         self,
@@ -83,7 +83,7 @@ class BinPickler:
         "Convenience method to construct a pickler for compressed storage."
         return cls(filename, codecs=[codec])
 
-    def dump(self, obj):
+    def dump(self, obj: object) -> None:
         "Dump an object to the file. Can only be called once."
         bio = io.BytesIO()
         pk = pickle.Pickler(
@@ -104,25 +104,25 @@ class BinPickler:
         self._write_buffer(buf)
         self._finish_file()
 
-    def close(self):
+    def close(self) -> None:
         "Close the bin pickler."
         self._file.close()
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(self, *args):
         self.close()
         return False
 
-    def _init_header(self):
+    def _init_header(self) -> None:
         pos = self._file.tell()
         if pos > 0:
             warnings.warn("BinPickler not at beginning of file")
         h = FileHeader()
         _log.debug("initializing header for %s", self.filename)
         self._file.write(h.encode())
-        assert self._file.tell() == pos + 16
+        assert self._file.tell() == pos + FileHeader.SIZE
 
     def _encode_buffer(
         self,
@@ -141,7 +141,7 @@ class BinPickler:
 
         return buf, [c.get_config() for c in codecs if c is not None]
 
-    def _write_buffer(self, buf: Buffer):
+    def _write_buffer(self, buf: Buffer) -> None:
         mv = memoryview(buf)
         offset = self._file.tell()
 
@@ -174,7 +174,7 @@ class BinPickler:
 
         self.entries.append(IndexEntry(offset, enc_len, length, hash.digest(), c_spec))
 
-    def _write_index(self):
+    def _write_index(self) -> FileTrailer:
         buf = msgpack.packb([e.to_repr() for e in self.entries])
         pos = self._file.tell()
         nbs = len(buf)
@@ -187,7 +187,7 @@ class BinPickler:
         self._file.write(ft.encode())
         return ft
 
-    def _finish_file(self):
+    def _finish_file(self) -> None:
         self._write_index()
 
         pos = self._file.tell()
@@ -198,7 +198,7 @@ class BinPickler:
         self._file.flush()
 
 
-def dump(obj, file, *, mappable=False, codecs=["gzip"]):
+def dump(obj, file: str | PathLike, *, mappable: bool = False, codecs: list[CodecArg] = ["gzip"]):
     """
     Dump an object to a BinPickle file.  This is a convenience wrapper
     around :class:`BinPickler`.
@@ -217,8 +217,8 @@ def dump(obj, file, *, mappable=False, codecs=["gzip"]):
         mappable(bool):
             If ``True``, save for memory-mapping.  ``codec`` is ignored
             in this case.
-        codec(codecs.Codec):
-            The codec to use to compress the data, when not saving for
+        codecs:
+            The codecs to use to compress the data, when not saving for
             memory-mapping.
     """
 

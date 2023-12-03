@@ -3,6 +3,7 @@ import mmap
 import logging
 import io
 from os import PathLike
+from typing import Optional
 from typing_extensions import Buffer
 import pickle
 import msgpack
@@ -32,10 +33,12 @@ class BinPickleFile:
     direct: bool
     header: FileHeader
     trailer: FileTrailer
-    _map: mmap.mmap
-    _mv: memoryview
+    _map: Optional[mmap.mmap]
+    _mv: Optional[memoryview]
+    _index_buf: Optional[memoryview]
+    entries: list[IndexEntry]
 
-    def __init__(self, filename, *, direct=False):
+    def __init__(self, filename: str | PathLike, *, direct: bool = False):
         self.filename = filename
         self.direct = direct
         with open(filename, "rb") as bpf:
@@ -51,20 +54,22 @@ class BinPickleFile:
         self.close()
         return False
 
-    def load(self):
+    def load(self) -> object:
         """
         Load the object from the binpickle file.
         """
         if not self.entries:
             raise ValueError("empty pickle file has no objects")
         p_bytes = self._read_buffer(self.entries[-1], direct=True)
-        _log.debug("unpickling %d bytes and %d buffers", len(p_bytes), len(self.entries) - 1)
+        _log.debug(
+            "unpickling %d bytes and %d buffers", memoryview(p_bytes).nbytes, len(self.entries) - 1
+        )
 
         buf_gen = (self._read_buffer(e) for e in self.entries[:-1])
         up = pickle.Unpickler(io.BytesIO(p_bytes), buffers=buf_gen)
         return up.load()
 
-    def find_errors(self):
+    def find_errors(self) -> list[str]:
         """
         Verify binpickle data structure validity.  If the file is invalid, returns
         a list of errors.
@@ -74,6 +79,7 @@ class BinPickleFile:
         buffer hashes, offset overlaps, and such.
         """
         errors = []
+        assert self._index_buf is not None, "file not loaded"
 
         i_sum = hashlib.sha256(self._index_buf).digest()
         if i_sum != self.trailer.hash:
@@ -93,7 +99,7 @@ class BinPickleFile:
 
         return errors
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the BinPickle file.  If the file is in direct mode, all
         retrieved objects and associated views must first be deleted.
@@ -104,10 +110,11 @@ class BinPickleFile:
             self._map.close()
             self._map = None
 
-    def _read_index(self):
+    def _read_index(self) -> None:
         tpos = self.header.trailer_pos()
         if tpos is None:
             raise ValueError("no file length, corrupt binpickle file?")
+        assert self._mv is not None, "file not open"
 
         buf = self._mv[tpos:]
         assert len(buf) == 44
@@ -119,7 +126,11 @@ class BinPickleFile:
         self.entries = [IndexEntry.from_repr(e) for e in msgpack.unpackb(self._index_buf)]
         _log.debug("read %d entries from file", len(self.entries))
 
-    def _read_buffer(self, entry: IndexEntry, *, direct=None, decode=True):
+    def _read_buffer(
+        self, entry: IndexEntry, *, direct: Optional[bool] = None, decode: bool = True
+    ) -> Buffer:
+        assert self._mv is not None, "file not open"
+        assert self._map is not None, "file not open"
         start = entry.offset
         length = entry.enc_length
         end = start + length
@@ -143,7 +154,7 @@ class BinPickleFile:
             return self._map[start:end]
 
 
-def load(file):
+def load(file: str | PathLike) -> object:
     """
     Load an object from a BinPickle file.
 
