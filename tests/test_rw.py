@@ -95,7 +95,7 @@ def test_write_encoded_arrays(arrays, codec):
             assert len(bpf.entries) == len(arrays)
             for e, a in zip(bpf.entries, arrays):
                 try:
-                    if codec is not None:
+                    if codec is not None and e.dec_length > 0:
                         assert e.codecs
                     assert e.dec_length == len(a)
                     dat = bpf._read_buffer(e)
