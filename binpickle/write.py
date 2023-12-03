@@ -11,7 +11,7 @@ from typing_extensions import Buffer, List, Optional, Self
 
 import numpy as np
 
-from .format import BufferTypeInfo, CodecSpec, FileHeader, FileTrailer, IndexEntry
+from .format import CodecSpec, FileHeader, FileTrailer, IndexEntry
 from .encode import ResolvedCodec, resolve_codec, CodecArg
 from ._util import human_size
 
