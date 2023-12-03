@@ -57,7 +57,7 @@ class FileHeader:
         if verify and v != VERSION:
             raise FormatError("invalid version {}".format(v))
         if verify and flags != 0:
-            raise FormatError("invalid flags")
+            raise FormatError("unsupported flags")
         return cls(v, off)
 
     @classmethod
