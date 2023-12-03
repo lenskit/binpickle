@@ -128,7 +128,7 @@ class BinPickler:
     def _encode_buffer(
         self,
         buf: Buffer,
-    ) -> tuple[Buffer & Sized, list[CodecSpec]]:
+    ) -> tuple[Buffer, list[CodecSpec]]:
         # resolve any deferred codecs
         codecs = [resolve_codec(c, buf) for c in self.codecs]
 
@@ -138,7 +138,7 @@ class BinPickler:
 
         return buf, [c.get_config() for c in codecs]
 
-    def _write_buffer(self, buf: Buffer & Sized):
+    def _write_buffer(self, buf: Buffer):
         mv = memoryview(buf)
         offset = self._file.tell()
 
@@ -155,20 +155,21 @@ class BinPickler:
 
         _log.debug("writing %d bytes at position %d", length, offset)
         buf, c_spec = self._encode_buffer(buf)
+        enc_len = memoryview(buf).nbytes
         _log.debug(
             "encoded %d bytes to %d (%.2f%% saved)",
             length,
-            len(buf),
-            (length - len(buf)) / length * 100 if length else -0.0,
+            enc_len,
+            (length - enc_len) / length * 100 if length else -0.0,
         )
         _log.debug("used codecs %s", c_spec)
         hash = hashlib.sha256(buf)
         _log.debug("has hash %s", hash.hexdigest())
         self._file.write(buf)
 
-        assert self._file.tell() == offset + len(buf)
+        assert self._file.tell() == offset + enc_len
 
-        self.entries.append(IndexEntry(offset, len(buf), length, hash.digest(), c_spec))
+        self.entries.append(IndexEntry(offset, enc_len, length, hash.digest(), c_spec))
 
     def _write_index(self):
         buf = msgpack.packb([e.to_repr() for e in self.entries])
