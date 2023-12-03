@@ -168,7 +168,7 @@ class BinPickleFile:
             _log.debug("verifying %s", msg)
             bhash = hash_buffer(buf)
             if bhash != hash:
-                raise ValueError(f"hash verification failed {msg}, corrupt file?")
+                raise ValueError(f"{msg} has incorrect hash, corrupt file?")
 
 
 def load(file: str | PathLike) -> object:
