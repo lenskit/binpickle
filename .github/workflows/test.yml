@@ -40,7 +40,7 @@ jobs:
 
     - name: Set up dependencies
       run: |
-        pip install -e '.[blosc,numcodecs,test]'
+        pip install -e '.[test]'
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
@@ -50,36 +50,10 @@ jobs:
       with:
         artifact-name: test-${{matrix.platform}}-py${{matrix.python}}
 
-  no-extras:
-    name: Test without extras
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
-
-    - name: Set up dependencies
-      run: |
-        pip install -e '.[test]'
-
-    - name: Run tests
-      run: python -m pytest --cov=binpickle --cov-report=xml tests
-
-    - name: Save test results
-      uses: lenskit/lkbuild/actions/save-test-results@main
-      with:
-        artifact-name: test-no-extras
-
   report:
     name: Process test results
     runs-on: ubuntu-latest
-    needs: [test, no-extras]
+    needs: [test]
 
     steps:
     - uses: actions/checkout@v3
