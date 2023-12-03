@@ -20,7 +20,7 @@ readme = "README.md"
 license = { file = "LICENSE.md" }
 dynamic = ["version"]
 dependencies = [
-  "msgpack >= 1.0",
+  "msgpack >= 1.0",  # p2c: -s msgpack-python
   "numcodecs >= 0.12",
   "typing-extensions ~= 4.8",
 ]
@@ -34,7 +34,7 @@ dev = [
   "copier",
   "sphinx-autobuild",
   "humanize ~=4.0",
-  "msgpack-types",
+  "msgpack-types",  # p2c: -p
   "pandas-stubs",
 ]
 test = [
