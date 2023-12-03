@@ -2,13 +2,20 @@
 Constants and functions defining the binpickle format.
 """
 
+from dataclasses import dataclass, field
 import struct
-from typing import NamedTuple, Optional
+from typing import NamedTuple, TypeAlias
+
+CodecSpec: TypeAlias = dict[str, str | bool | int | float | None]
+"""
+Type of codec specification dictionaries, to be passed to
+:func:`numcodecs.registry.get_codec`.
+"""
 
 MAGIC = b"BPCK"
-VERSION = 1
+VERSION = 2
 HEADER_FORMAT = struct.Struct("!4sHHq")
-TRAILER_FORMAT = struct.Struct("!QLL")
+TRAILER_FORMAT = struct.Struct("!QL32s")
 
 
 class FileHeader(NamedTuple):
@@ -66,16 +73,16 @@ class FileTrailer(NamedTuple):
 
     1. Index start (8 bytes, big-endian).  Measured in bytes from the start of the file.
     2. Index length (4 bytes, big-endian). The number of bytes in the index.
-    3. Index checksum (4 bytes, big-endian). The Adler32 checksum of the index data.
+    3. Index digest (32 bytes). The SHA256 digest of the index data.
     """
 
     offset: int
     length: int
-    checksum: int
+    hash: bytes
 
     def encode(self):
         "Encode the file trailer as bytes."
-        return TRAILER_FORMAT.pack(self.offset, self.length, self.checksum)
+        return TRAILER_FORMAT.pack(self.offset, self.length, self.hash)
 
     @classmethod
     def decode(cls, buf, *, verify=True):
@@ -84,7 +91,8 @@ class FileTrailer(NamedTuple):
         return cls(off, len, ck)
 
 
-class IndexEntry(NamedTuple):
+@dataclass
+class IndexEntry:
     """
     Index entry for a buffer in the BinPickle index.
     """
@@ -95,10 +103,10 @@ class IndexEntry(NamedTuple):
     "The encoded length of the buffer data in bytes."
     dec_length: int
     "The decoded length of the buffer in bytes."
-    checksum: int
-    "The Adler-32 checksum of the encoded buffer data."
-    codec: Optional[tuple] = None
-    "The codec used to encode the buffer, or None."
+    hash: bytes
+    "The SHA-256 checksum of the encoded buffer data."
+    codecs: list[CodecSpec] = field(default_factory=list)
+    "The sequence of codecs used to encode the buffer."
 
     def to_repr(self):
         "Convert an index entry to its MsgPack-compatible representation"

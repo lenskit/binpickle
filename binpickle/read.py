@@ -5,8 +5,9 @@ from zlib import adler32
 import pickle
 import msgpack
 
+from binpickle.encode import resolve_codec
+
 from .format import FileHeader, IndexEntry, FileTrailer
-from .codecs import get_codec
 
 _log = logging.getLogger(__name__)
 
@@ -116,12 +117,12 @@ class BinPickleFile:
         if direct is None:
             direct = self.direct
 
-        if decode and entry.codec:
-            name, cfg = entry.codec
-            _log.debug("decoding %d bytes from %d with %s", length, start, name)
-            out = bytearray(entry.dec_length)
-            codec = get_codec(name, cfg)
-            codec.decode_to(self._mv[start:end], out)
+        if decode and entry.codecs:
+            codecs = [resolve_codec(c) for c in entry.codecs]
+            _log.debug("decoding %d bytes from %d with %s", length, start, entry.codecs)
+            out = self._mv[start:end]
+            for codec in codecs[::-1]:
+                out = codec.decode(out)
             return out
         if direct:
             _log.debug("mapping %d bytes from %d", length, start)
