@@ -27,10 +27,13 @@ class BinPickleFile:
             outlast the :class:`BinPickleFile` instance.  If ``False``, they
             are copied from the file and do not need to be freed before
             :meth:`close` is called.
+        verify(bool):
+            If ``True`` (the default), verify file checksums while reading.
     """
 
     filename: str | PathLike
     direct: bool
+    verify: bool
     header: FileHeader
     trailer: FileTrailer
     _map: Optional[mmap.mmap]
@@ -38,9 +41,10 @@ class BinPickleFile:
     _index_buf: Optional[memoryview]
     entries: list[IndexEntry]
 
-    def __init__(self, filename: str | PathLike, *, direct: bool = False):
+    def __init__(self, filename, *, direct: bool = False, verify: bool = True):
         self.filename = filename
         self.direct = direct
+        self.verify = verify
         with open(filename, "rb") as bpf:
             self.header = FileHeader.read(bpf)
             self._map = mmap.mmap(bpf.fileno(), self.header.length, access=mmap.ACCESS_READ)
