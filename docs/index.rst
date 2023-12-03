@@ -12,12 +12,13 @@ BinPickle supports a few useful features on top of standard pickling:
 * Optional per-buffer compression
 * Memory-mapped buffers (when uncompressed) for efficiently sharing
 
-BinPickle wraps Python's pickling functionality, so any object that can be pickled
-(including SciKit models) can be stored with BinPickle.  If the object supports
-Pickle Protocol 5 (or stores most of its data in NumPy arrays, which in recent
-versions support Pickle 5), then large array data will be efficiently stored,
-either compressed (with Blosc compression by default) or page-aligned and ready
-for memory-mapping, possibly into multiple processes simultaneously.
+BinPickle wraps Python's pickling functionality, so any object that can be
+pickled (including SciKit models) can be stored with BinPickle.  If the object
+supports Pickle Protocol 5 (or stores most of its data in NumPy arrays, which in
+recent versions support Pickle 5), then large array data will be efficiently
+stored, either compressed (using any compressor supported by
+:py:mod:`numcodecs`) or page-aligned and ready for memory-mapping, possibly into
+multiple processes simultaneously.
 
 Quick Start
 -----------
@@ -39,7 +40,6 @@ Contents
 
    write
    read
-   codecs
    format
 
 Inspiriation
