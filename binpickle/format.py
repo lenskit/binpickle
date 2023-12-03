@@ -4,7 +4,7 @@ Constants and functions defining the binpickle format.
 
 from dataclasses import dataclass, field, fields
 import struct
-from typing import NamedTuple, TypeAlias
+from typing import TypeAlias
 
 CodecSpec: TypeAlias = dict[str, str | bool | int | float | None]
 """
@@ -18,7 +18,8 @@ HEADER_FORMAT = struct.Struct("!4sHHq")
 TRAILER_FORMAT = struct.Struct("!QL32s")
 
 
-class FileHeader(NamedTuple):
+@dataclass
+class FileHeader:
     """
     File header for a BinPickle file.  The header is a 16-byte sequence containing the
     magic (``BPCK``) followed by version and offset information:
@@ -28,6 +29,8 @@ class FileHeader(NamedTuple):
     3. File length (8 bytes, big-endian).  Length is signed; if the file length is not known,
        this field is set to -1.
     """
+
+    SIZE = HEADER_FORMAT.size
 
     version: int = VERSION
     "The NumPy file version."
@@ -65,7 +68,8 @@ class FileHeader(NamedTuple):
             return None  # We do not know the file size
 
 
-class FileTrailer(NamedTuple):
+@dataclass
+class FileTrailer:
     """
     File trailer for a BinPickle file.  The trailer is a 44-byte sequence that tells the
     reader where to find the rest of the binpickle data.  It consists of the following
@@ -75,6 +79,8 @@ class FileTrailer(NamedTuple):
     2. Index length (4 bytes, big-endian). The number of bytes in the index.
     3. Index digest (32 bytes). The SHA256 digest of the index data.
     """
+
+    SIZE = TRAILER_FORMAT.size
 
     offset: int
     length: int

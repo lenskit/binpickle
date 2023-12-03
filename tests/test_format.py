@@ -5,7 +5,9 @@ from binpickle.format import *
 
 def test_format_sizes():
     assert HEADER_FORMAT.size == 16
+    assert FileHeader.SIZE == 16
     assert TRAILER_FORMAT.size == 44
+    assert FileTrailer.SIZE == 44
 
 
 def test_pack_default_header():

@@ -12,7 +12,7 @@ except ImportError:
     naturalsize = None
 
 
-def human_size(bytes):
+def human_size(bytes: int | float) -> str:
     if naturalsize:
         return naturalsize(bytes, binary=True, format="%.2f")
     else:

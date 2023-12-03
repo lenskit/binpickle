@@ -194,7 +194,7 @@ def test_dump_frame(tmp_path, rng: np.random.Generator):
     )
 
     dump(df, file)
-    df2 = load(file)
+    df2: pd.DataFrame = load(file)
 
     assert all(df2.columns == df.columns)
     for c in df2.columns:
