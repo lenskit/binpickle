@@ -29,7 +29,6 @@ class FileStatus(Enum):
 class BPKInfo:
     status: FileStatus
     size: int
-    mappable: bool
 
     @property
     def is_valid(self):
@@ -221,8 +220,8 @@ def file_info(file: str | PathLike) -> BPKInfo:
     try:
         with open(file, "rb") as f:
             info = FileHeader.read(f)
-            return BPKInfo(FileStatus.BINPICKLE, info.length, False)
+            return BPKInfo(FileStatus.BINPICKLE, info.length)
     except FileNotFoundError:
-        return BPKInfo(FileStatus.MISSING, 0, False)
+        return BPKInfo(FileStatus.MISSING, 0)
     except BinPickleError:
-        return BPKInfo(FileStatus.INVALID, 0, False)
+        return BPKInfo(FileStatus.INVALID, 0)
