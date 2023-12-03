@@ -7,7 +7,9 @@ The :py:mod:`binpickle.format` module contains the data structures that define t
 BinPickle format.
 
 Users will not need these classes.  They are documented here in the interest of documenting
-the file format.
+the file format.  The current format version is **2**, first used in binpickle 0.4.0; this
+is not compatible with prior versions.
+
 
 File Structure
 --------------
@@ -30,7 +32,7 @@ A Version 1 BinPickle file is organized as follows:
 2. The out-of-band buffers, in order.  Padding may appear before or after any buffer's contents.
 3. The pickle bytes, as a buffer.
 4. The file index, stored as a list of :py:class:`IndexEntry` objects encoded in MsgPack.
-5. 16-byte trailer (see :py:class:`FileTrailer`).
+5. 44-byte trailer (see :py:class:`FileTrailer`).
 
 The position and length of each buffer is stored in the index, so buffers can have arbitrary
 padding between them.  They could even technically be out-of-order, but such a file should
@@ -45,3 +47,30 @@ Classes
 .. autoclass:: FileTrailer
 
 .. autoclass:: IndexEntry
+
+Format History
+--------------
+
+The current file format version is **2**, introduced in BinPickle 0.4.0.
+
+.. _format-v2:
+
+Version 2
+~~~~~~~~~
+
+Version 2 introduced the following:
+
+*   Replaced Adler32 checksums with SHA-256 digests.
+*   Replaced the single ``codec`` field with a ``codecs`` list field.  The new
+    field directly specifies a list of :py:mod:`numcodecs` codec configurations
+    in the order they were applied to encode the buffer.  The old native codecs
+    have been removed, all codecs come from numcodecs.
+*   Added the ``info`` field to :py:class:`IndexEntry` to store information about
+    the buffer's data, when available (currently stores NumPy data type and shape
+    when serializing a NumPy array).
+
+Version 1
+~~~~~~~~~
+
+Version 1 is the original BinPickle format, used through the 0.3 release series. It
+is no longer supported.
