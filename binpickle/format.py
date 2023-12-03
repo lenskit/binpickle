@@ -12,6 +12,11 @@ Type of codec specification dictionaries, to be passed to
 :func:`numcodecs.registry.get_codec`.
 """
 
+BufferTypeInfo: TypeAlias = tuple[str, str, tuple[int, ...]]
+"""
+Type of buffer type (and size/shape) information.
+"""
+
 MAGIC = b"BPCK"
 VERSION = 2
 HEADER_FORMAT = struct.Struct("!4sHHq")
@@ -111,6 +116,8 @@ class IndexEntry:
     "The decoded length of the buffer in bytes."
     hash: bytes
     "The SHA-256 checksum of the encoded buffer data."
+    info: BufferTypeInfo | None
+    "Type information for the buffer (if available)."
     codecs: list[CodecSpec] = field(default_factory=list)
     "The sequence of codecs used to encode the buffer."
 

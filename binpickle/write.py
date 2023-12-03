@@ -9,6 +9,8 @@ import msgpack
 
 from typing_extensions import Buffer, List, Optional, Self
 
+import numpy as np
+
 from .format import CodecSpec, FileHeader, FileTrailer, IndexEntry
 from .encode import ResolvedCodec, resolve_codec, CodecArg
 from ._util import human_size
@@ -142,7 +144,7 @@ class BinPickler:
         return buf, [c.get_config() for c in codecs if c is not None]
 
     def _write_buffer(self, buf: Buffer) -> None:
-        mv = memoryview(buf)
+        mv = buf.raw() if isinstance(buf, pickle.PickleBuffer) else memoryview(buf)
         offset = self._file.tell()
 
         if self.align:
@@ -155,6 +157,10 @@ class BinPickler:
                 offset = off2
 
         length = mv.nbytes
+
+        binfo = None
+        if isinstance(mv.obj, np.ndarray):
+            binfo = ("ndarray", str(mv.obj.dtype), mv.obj.shape)
 
         _log.debug("writing %d bytes at position %d", length, offset)
         buf, c_spec = self._encode_buffer(buf)
@@ -172,7 +178,7 @@ class BinPickler:
 
         assert self._file.tell() == offset + enc_len
 
-        self.entries.append(IndexEntry(offset, enc_len, length, hash.digest(), c_spec))
+        self.entries.append(IndexEntry(offset, enc_len, length, hash.digest(), binfo, c_spec))
 
     def _write_index(self) -> FileTrailer:
         buf = msgpack.packb([e.to_repr() for e in self.entries])
