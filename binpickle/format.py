@@ -49,8 +49,11 @@ class FileHeader:
         return HEADER_FORMAT.pack(MAGIC, self.version, 0, self.length)
 
     @classmethod
-    def decode(cls, buf, *, verify=True):
+    def decode(cls, buf: bytes, *, verify=True):
         "Decode a file header from bytes."
+        if len(buf) != HEADER_FORMAT.size:
+            raise FormatError("incorrect header length")
+
         m, v, flags, off = HEADER_FORMAT.unpack(buf)
         if verify and m != MAGIC:
             raise FormatError("invalid magic {}".format(m))
