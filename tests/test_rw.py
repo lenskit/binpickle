@@ -37,11 +37,6 @@ RW_CONFIGS = it.product(RW_CTORS, [False, True])
 RW_PARAMS = ["writer", "direct"]
 
 
-@pytest.fixture
-def rng():
-    return np.random.default_rng()
-
-
 def test_empty(tmp_path):
     "Write a file with nothing in it"
     file = tmp_path / "data.bpk"
