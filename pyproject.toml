@@ -21,6 +21,8 @@ license = { file = "LICENSE.md" }
 dynamic = ["version"]
 dependencies = [
   "msgpack >= 1.0",
+  "numcodecs >= 0.12",
+  "typing-extensions ~= 4.8",
 ]
 
 [project.optional-dependencies]
@@ -44,12 +46,6 @@ doc = [
   "sphinx >=4.2",
   "sphinxext-opengraph >= 0.5",
   "furo",
-]
-blosc = [
-  "blosc",
-]
-numcodecs = [
-  "numcodecs >= 0.10",
 ]
 
 [project.urls]

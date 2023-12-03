@@ -4,6 +4,9 @@ from pathlib import Path
 import gc
 import numpy as np
 import pandas as pd
+import numcodecs as nc
+from numcodecs.registry import codec_registry
+from numcodecs.abc import Codec
 
 import pytest
 from hypothesis import given, assume, settings
@@ -12,24 +15,23 @@ from hypothesis.extra.numpy import arrays, scalar_dtypes
 
 from binpickle.read import BinPickleFile, load
 from binpickle.write import BinPickler, dump
-from binpickle import codecs
 
 
-RW_CTORS = [BinPickler, BinPickler.mappable, BinPickler.compressed]
-RW_CODECS: list[st.SearchStrategy[codecs.Codec | None]] = [st.just(None), st.builds(codecs.GZ)]
-if codecs.Blosc.AVAILABLE:
-    RW_CTORS.append(lambda f: BinPickler.compressed(f, codecs.Blosc("zstd", 5)))
-    RW_CODECS.append(st.builds(codecs.Blosc))
-    RW_CODECS.append(st.builds(codecs.Blosc, st.just("zstd")))
-if codecs.NC.AVAILABLE:
-    import numcodecs
-
-    RW_CTORS.append(lambda f: BinPickler.compressed(f, numcodecs.LZMA()))
-    RW_CODECS.append(st.builds(codecs.NC, st.just(numcodecs.LZMA())))
-    # also build a chain test
-    RW_CTORS.append(
-        lambda f: BinPickler.compressed(f, codecs.Chain([numcodecs.MsgPack(), codecs.GZ()]))
-    )
+RW_CTORS = [
+    BinPickler,
+    BinPickler.mappable,
+    BinPickler.compressed,
+    lambda f: BinPickler.compressed(f, nc.LZMA()),
+]
+RW_CODECS: list[st.SearchStrategy[Codec | str | None]] = [
+    st.just(None),
+    st.just("gzip"),
+    st.builds(nc.GZip),
+    st.builds(nc.LZMA),
+]
+if "blosc" in codec_registry:
+    RW_CODECS.append(st.builds(nc.Blosc))
+    RW_CODECS.append(st.builds(nc.Blosc, st.one_of(st.just("zstd"), st.just("lz4"))))
 
 RW_CONFIGS = it.product(RW_CTORS, [False, True])
 RW_PARAMS = ["writer", "direct"]
@@ -47,7 +49,7 @@ def test_empty(tmp_path):
     with BinPickler(file) as w:
         w._finish_file()
 
-    assert file.stat().st_size == 33
+    assert file.stat().st_size == 61
 
     with BinPickleFile(file) as bpf:
         assert len(bpf.entries) == 0
@@ -83,7 +85,7 @@ def test_write_encoded_arrays(arrays, codec):
     with TemporaryDirectory(".test", "binpickle-") as path:
         file = Path(path) / "data.bpk"
 
-        with BinPickler.compressed(file, codec) as w:
+        with BinPickler(file, codecs=[codec] if codec else []) as w:
             for a in arrays:
                 w._write_buffer(a)
             w._finish_file()
@@ -93,8 +95,8 @@ def test_write_encoded_arrays(arrays, codec):
             assert len(bpf.entries) == len(arrays)
             for e, a in zip(bpf.entries, arrays):
                 try:
-                    if codec is not None:
-                        assert e.codec
+                    if codec is not None and e.dec_length > 0:
+                        assert e.codecs
                     assert e.dec_length == len(a)
                     dat = bpf._read_buffer(e)
                     assert dat == a
@@ -146,7 +148,6 @@ def test_pickle_frame(tmp_path, rng: np.random.Generator, writer, direct):
         del df2
 
 
-@pytest.mark.skipif(not codecs.NC.AVAILABLE, reason="numcodecs not available")
 def test_pickle_frame_dyncodec(tmp_path, rng: np.random.Generator):
     file = tmp_path / "data.bpk"
 
@@ -162,11 +163,11 @@ def test_pickle_frame_dyncodec(tmp_path, rng: np.random.Generator):
         obj = memoryview(buf).obj
         if isinstance(obj, np.ndarray) and obj.dtype == np.float64:
             print("compacting double array")
-            return codecs.Chain([numcodecs.AsType("f4", "f8"), codecs.Blosc("zstd", 9)])
+            return nc.AsType("f4", "f8")
         else:
-            return codecs.Blosc("zstd", 9)
+            None
 
-    with BinPickler.compressed(file, codec) as w:
+    with BinPickler(file, codecs=[codec, nc.Blosc("zstd", 3)]) as w:
         w.dump(df)
 
     with BinPickleFile(file) as bpf:

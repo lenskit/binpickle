@@ -5,7 +5,7 @@ from binpickle.format import *
 
 def test_format_sizes():
     assert HEADER_FORMAT.size == 16
-    assert TRAILER_FORMAT.size == 16
+    assert TRAILER_FORMAT.size == 44
 
 
 def test_pack_default_header():
@@ -42,11 +42,11 @@ def test_catch_bad_magic():
 
 def test_catch_bad_version():
     with raises(ValueError) as exc:
-        FileHeader.decode(b"BPCK\x00\x02\x00\x00" + (b"\x00" * 8))
+        FileHeader.decode(b"BPCK\x00\x12\x00\x00" + (b"\x00" * 8))
     assert "version" in str(exc.value)
 
 
 def test_catch_bad_padding():
     with raises(ValueError) as exc:
-        FileHeader.decode(b"BPCK\x00\x01\x00\xff" + (b"\x00" * 8))
+        FileHeader.decode(b"BPCK\x00\x02\x00\xff" + (b"\x00" * 8))
     assert "padding" in str(exc.value)

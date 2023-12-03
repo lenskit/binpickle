@@ -1,14 +1,17 @@
 import mmap
-from typing import List
+from os import PathLike
+from typing import List, Optional
 import warnings
 import logging
 import io
-from zlib import adler32
+import hashlib
 import pickle
 import msgpack
 
-from .format import FileHeader, FileTrailer, IndexEntry
-from . import codecs
+from typing_extensions import Buffer
+
+from .format import CodecSpec, FileHeader, FileTrailer, IndexEntry
+from .encode import ResolvedCodec, resolve_codec, CodecArg
 from ._util import human_size
 
 _log = logging.getLogger(__name__)
@@ -21,27 +24,6 @@ def _align_pos(pos, size=mmap.PAGESIZE):
         return pos + (size - rem)
     else:
         return pos
-
-
-class CKOut:
-    """
-    Wrapper for binary output that computes checksums and sizes on the fly.
-    """
-
-    def __init__(self, base):
-        self.bytes = 0
-        self.checksum = 1
-        self.delegate = base
-
-    def write(self, data):
-        # get a memory view so we have a portable count of bytes
-        mv = memoryview(data)
-        self.bytes += mv.nbytes
-        self.checksum = adler32(data, self.checksum)
-        return self.delegate.write(data)
-
-    def flush(self):
-        self.delegate.flush()
 
 
 class BinPickler:
@@ -66,26 +48,40 @@ class BinPickler:
             use different codecs for different types or sizes of buffers).
     """
 
+    filename: str | PathLike
+    align: bool
+    codecs: list[ResolvedCodec]
     entries: List[IndexEntry]
 
-    def __init__(self, filename, *, align=False, codec=None):
+    def __init__(
+        self,
+        filename: str | PathLike,
+        *,
+        align=False,
+        codecs: Optional[list[CodecArg]] = None,
+    ):
         self.filename = filename
         self.align = align
         self._file = open(filename, "wb")
         self.entries = []
-        self.codec = codec
+
+        if codecs is None:
+            self.codecs = []
+        else:
+            # pre-resolve the codecs
+            self.codecs = [resolve_codec(c) for c in codecs]
 
         self._init_header()
 
     @classmethod
-    def mappable(cls, filename):
+    def mappable(cls, filename: str | PathLike):
         "Convenience method to construct a pickler for memory-mapped use."
         return cls(filename, align=True)
 
     @classmethod
-    def compressed(cls, filename, codec=codecs.GZ()):
+    def compressed(cls, filename: str | PathLike, codec: CodecArg = "gzip"):
         "Convenience method to construct a pickler for compressed storage."
-        return cls(filename, codec=codec)
+        return cls(filename, codecs=[codec])
 
     def dump(self, obj):
         "Dump an object to the file. Can only be called once."
@@ -128,21 +124,24 @@ class BinPickler:
         self._file.write(h.encode())
         assert self._file.tell() == pos + 16
 
-    def _encode_buffer(self, buf, out):
-        if self.codec is None:
-            out.write(buf)
-            return None
-        elif hasattr(self.codec, "__call__"):
-            # codec is callable, call it to get the codec
-            codec = self.codec(buf)
-            codec = codecs.make_codec(codec)
-        else:
-            codec = codecs.make_codec(self.codec)
+    def _encode_buffer(
+        self,
+        buf: Buffer,
+    ) -> tuple[Buffer, list[CodecSpec]]:
+        # fast-path empty buffers
+        if memoryview(buf).nbytes == 0:
+            return b"", []
 
-        codec.encode_to(buf, out)
-        return (codec.NAME, codec.config())
+        # resolve any deferred codecs
+        codecs = [resolve_codec(c, buf) for c in self.codecs]
 
-    def _write_buffer(self, buf):
+        for codec in codecs:
+            if codec is not None:
+                buf = codec.encode(buf)
+
+        return buf, [c.get_config() for c in codecs if c is not None]
+
+    def _write_buffer(self, buf: Buffer):
         mv = memoryview(buf)
         offset = self._file.tell()
 
@@ -158,19 +157,22 @@ class BinPickler:
         length = mv.nbytes
 
         _log.debug("writing %d bytes at position %d", length, offset)
-        cko = CKOut(self._file)
-        c_spec = self._encode_buffer(buf, cko)
+        buf, c_spec = self._encode_buffer(buf)
+        enc_len = memoryview(buf).nbytes
         _log.debug(
             "encoded %d bytes to %d (%.2f%% saved)",
             length,
-            cko.bytes,
-            (length - cko.bytes) / length * 100 if length else -0.0,
+            enc_len,
+            (length - enc_len) / length * 100 if length else -0.0,
         )
-        _log.debug("used codec %s", c_spec)
+        _log.debug("used codecs %s", c_spec)
+        hash = hashlib.sha256(buf)
+        _log.debug("has hash %s", hash.hexdigest())
+        self._file.write(buf)
 
-        assert self._file.tell() == offset + cko.bytes
+        assert self._file.tell() == offset + enc_len
 
-        self.entries.append(IndexEntry(offset, cko.bytes, length, cko.checksum, c_spec))
+        self.entries.append(IndexEntry(offset, enc_len, length, hash.digest(), c_spec))
 
     def _write_index(self):
         buf = msgpack.packb([e.to_repr() for e in self.entries])
@@ -180,7 +182,8 @@ class BinPickler:
             "writing %d index entries (%d bytes) at position %d", len(self.entries), nbs, pos
         )
         self._file.write(buf)
-        ft = FileTrailer(pos, nbs, adler32(buf))
+        hash = hashlib.sha256(buf)
+        ft = FileTrailer(pos, nbs, hash.digest())
         self._file.write(ft.encode())
         return ft
 
@@ -195,7 +198,7 @@ class BinPickler:
         self._file.flush()
 
 
-def dump(obj, file, *, mappable=False, codec=codecs.GZ()):
+def dump(obj, file, *, mappable=False, codecs=["gzip"]):
     """
     Dump an object to a BinPickle file.  This is a convenience wrapper
     around :class:`BinPickler`.
@@ -222,6 +225,6 @@ def dump(obj, file, *, mappable=False, codec=codecs.GZ()):
     if mappable:
         bpk = BinPickler(file, align=True)
     else:
-        bpk = BinPickler(file, align=False, codec=codec)
+        bpk = BinPickler(file, align=False, codecs=codecs)
     with bpk:
         bpk.dump(obj)

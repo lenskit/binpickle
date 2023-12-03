@@ -1,12 +1,15 @@
+import hashlib
 import mmap
 import logging
 import io
-from zlib import adler32
+from os import PathLike
+from typing_extensions import Buffer
 import pickle
 import msgpack
 
+from binpickle.encode import resolve_codec
+
 from .format import FileHeader, IndexEntry, FileTrailer
-from .codecs import get_codec
 
 _log = logging.getLogger(__name__)
 
@@ -24,6 +27,13 @@ class BinPickleFile:
             are copied from the file and do not need to be freed before
             :meth:`close` is called.
     """
+
+    filename: str | PathLike
+    direct: bool
+    header: FileHeader
+    trailer: FileTrailer
+    _map: mmap.mmap
+    _mv: memoryview
 
     def __init__(self, filename, *, direct=False):
         self.filename = filename
@@ -61,25 +71,25 @@ class BinPickleFile:
 
         Fatal index errors will result in a failure to open the file, so things such as
         invalid msgpack formats in the index won't be detected here.  This method checks
-        buffer checksums, offset overlaps, and such.
+        buffer hashes, offset overlaps, and such.
         """
         errors = []
 
-        i_sum = adler32(self._index_buf)
-        if i_sum != self.trailer.checksum:
-            errors.append(f"invalid index checksum ({i_sum} != {self.trailer.checksum})")
+        i_sum = hashlib.sha256(self._index_buf).digest()
+        if i_sum != self.trailer.hash:
+            errors.append("index hash mismatch")
 
         position = 16
         for i, e in enumerate(self.entries):
             if e.offset < position:
                 errors.append(f"entry {i}: offset {e.offset} before expected start {position}")
             buf = self._read_buffer(e, direct=True)
-            ndec = len(buf)
+            ndec = memoryview(buf).nbytes
             if ndec != e.dec_length:
                 errors.append(f"entry {i}: decoded to {ndec} bytes, expected {e.dec_length}")
-            cks = adler32(self._read_buffer(e, direct=True, decode=False))
-            if cks != e.checksum:
-                errors.append("entry {i}: invalid checksum ({cks} != {e.checksum}")
+            cks = hashlib.sha256(self._read_buffer(e, direct=True, decode=False)).digest()
+            if cks != e.hash:
+                errors.append("entry {i}: invalid digest")
 
         return errors
 
@@ -100,7 +110,7 @@ class BinPickleFile:
             raise ValueError("no file length, corrupt binpickle file?")
 
         buf = self._mv[tpos:]
-        assert len(buf) == 16
+        assert len(buf) == 44
         self.trailer = FileTrailer.decode(buf)
 
         i_start = self.trailer.offset
@@ -116,13 +126,15 @@ class BinPickleFile:
         if direct is None:
             direct = self.direct
 
-        if decode and entry.codec:
-            name, cfg = entry.codec
-            _log.debug("decoding %d bytes from %d with %s", length, start, name)
-            out = bytearray(entry.dec_length)
-            codec = get_codec(name, cfg)
-            codec.decode_to(self._mv[start:end], out)
+        _log.debug("decoding %d bytes from %d with %s", length, start, entry.codecs)
+
+        if decode and entry.codecs:
+            codecs = [resolve_codec(c) for c in entry.codecs]
+            out: Buffer = self._mv[start:end]
+            for codec in codecs[::-1]:
+                out = codec.decode(out)
             return out
+
         if direct:
             _log.debug("mapping %d bytes from %d", length, start)
             return self._mv[start:end]
