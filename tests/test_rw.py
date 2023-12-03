@@ -167,7 +167,7 @@ def test_pickle_frame_dyncodec(tmp_path, rng: np.random.Generator):
         else:
             None
 
-    with BinPickler.compressed(file, codecs=[codec, nc.Blosc("zstd", 3)]) as w:
+    with BinPickler(file, codecs=[codec, nc.Blosc("zstd", 3)]) as w:
         w.dump(df)
 
     with BinPickleFile(file) as bpf:
