@@ -67,7 +67,7 @@ class FileHeader(NamedTuple):
 
 class FileTrailer(NamedTuple):
     """
-    File trailer for a BinPickle file.  The trailer is a 16-byte sequence that tells the
+    File trailer for a BinPickle file.  The trailer is a 44-byte sequence that tells the
     reader where to find the rest of the binpickle data.  It consists of the following
     fields:
 
