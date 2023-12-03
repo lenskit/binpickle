@@ -11,6 +11,7 @@ import msgpack
 from binpickle.encode import resolve_codec
 
 from .format import FileHeader, IndexEntry, FileTrailer
+from ._util import hash_buffer
 
 _log = logging.getLogger(__name__)
 
@@ -127,6 +128,8 @@ class BinPickleFile:
         i_start = self.trailer.offset
         i_end = i_start + self.trailer.length
         self._index_buf = self._mv[i_start:i_end]
+        self._verify_buffer(self._index_buf, self.trailer.hash, "index")
+
         self.entries = [IndexEntry.from_repr(e) for e in msgpack.unpackb(self._index_buf)]
         _log.debug("read %d entries from file", len(self.entries))
 
@@ -141,21 +144,31 @@ class BinPickleFile:
         if direct is None:
             direct = self.direct
 
+        buf = self._mv[start:end]
+        self._verify_buffer(buf, entry.hash)
+
         _log.debug("decoding %d bytes from %d with %s", length, start, entry.codecs)
 
         if decode and entry.codecs:
             codecs = [resolve_codec(c) for c in entry.codecs]
-            out: Buffer = self._mv[start:end]
+            out: Buffer = buf
             for codec in codecs[::-1]:
                 out = codec.decode(out)
             return out
 
         if direct:
             _log.debug("mapping %d bytes from %d", length, start)
-            return self._mv[start:end]
+            return buf
         else:
             _log.debug("copying %d bytes from %d", length, start)
-            return self._map[start:end]
+            return buf.tobytes()
+
+    def _verify_buffer(self, buf: memoryview, hash: bytes, msg: str = "buffer"):
+        if self.verify:
+            _log.debug("verifying %s", msg)
+            bhash = hash_buffer(buf)
+            if bhash != hash:
+                raise ValueError(f"hash verification failed {msg}, corrupt file?")
 
 
 def load(file: str | PathLike) -> object:
