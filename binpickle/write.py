@@ -195,7 +195,7 @@ class BinPickler:
         self._file.flush()
 
 
-def dump(obj, file, *, mappable=False, codec=["gzip"]):
+def dump(obj, file, *, mappable=False, codecs=["gzip"]):
     """
     Dump an object to a BinPickle file.  This is a convenience wrapper
     around :class:`BinPickler`.
@@ -222,6 +222,6 @@ def dump(obj, file, *, mappable=False, codec=["gzip"]):
     if mappable:
         bpk = BinPickler(file, align=True)
     else:
-        bpk = BinPickler(file, align=False, codec=codec)
+        bpk = BinPickler(file, align=False, codecs=codecs)
     with bpk:
         bpk.dump(obj)
