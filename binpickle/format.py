@@ -6,7 +6,7 @@ import struct
 from typing import NamedTuple, Optional
 
 MAGIC = b"BPCK"
-VERSION = 2
+VERSION = 1
 HEADER_FORMAT = struct.Struct("!4sHHq")
 TRAILER_FORMAT = struct.Struct("!QLL")
 
