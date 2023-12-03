@@ -43,11 +43,14 @@ def resolve_codec(codec: CodecArg, buf: Optional[Buffer] = None) -> ResolvedCode
         return get_codec(codec)
     elif isinstance(codec, Codec):
         return codec
-    elif hasattr(codec, "__call__") and buf is not None:
-        spec = codec(buf)
-        if spec is None:
-            return None
+    elif hasattr(codec, "__call__"):
+        if buf is None:
+            return codec
         else:
-            return resolve_codec(spec, buf)
+            spec = codec(buf)
+            if spec is None:
+                return None
+            else:
+                return resolve_codec(spec, buf)
     else:
         raise TypeError(f"invalid codec argument {type(codec)}")

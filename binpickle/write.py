@@ -136,7 +136,7 @@ class BinPickler:
             if codec is not None:
                 buf = codec.encode(buf)
 
-        return buf, [c.get_config() for c in codecs]
+        return buf, [c.get_config() for c in codecs if c is not None]
 
     def _write_buffer(self, buf: Buffer):
         mv = memoryview(buf)
