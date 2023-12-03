@@ -1,6 +1,5 @@
 import mmap
 from os import PathLike
-from typing import List, Optional, Self
 import warnings
 import logging
 import io
@@ -8,7 +7,7 @@ import hashlib
 import pickle
 import msgpack
 
-from typing_extensions import Buffer
+from typing_extensions import Buffer, List, Optional, Self
 
 from .format import CodecSpec, FileHeader, FileTrailer, IndexEntry
 from .encode import ResolvedCodec, resolve_codec, CodecArg
