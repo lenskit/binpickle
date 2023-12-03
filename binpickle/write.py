@@ -1,6 +1,6 @@
 import mmap
 from os import PathLike
-from typing import List, Optional, Sized
+from typing import List, Optional
 import warnings
 import logging
 import io

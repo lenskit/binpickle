@@ -8,7 +8,6 @@ from typing_extensions import Buffer
 
 from numcodecs.abc import Codec
 from numcodecs.registry import get_codec
-import numpy as np
 
 from binpickle.format import CodecSpec
 

@@ -4,7 +4,6 @@ import logging
 import io
 from os import PathLike
 from typing_extensions import Buffer
-from zlib import adler32
 import pickle
 import msgpack
 
