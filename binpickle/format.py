@@ -6,6 +6,8 @@ from dataclasses import dataclass, field, fields
 import struct
 from typing import TypeAlias
 
+from binpickle.errors import FormatError
+
 CodecSpec: TypeAlias = dict[str, str | bool | int | float | None]
 """
 Type of codec specification dictionaries, to be passed to
@@ -49,13 +51,13 @@ class FileHeader:
     @classmethod
     def decode(cls, buf, *, verify=True):
         "Decode a file header from bytes."
-        m, v, pad, off = HEADER_FORMAT.unpack(buf)
+        m, v, flags, off = HEADER_FORMAT.unpack(buf)
         if verify and m != MAGIC:
-            raise ValueError("invalid magic {}".format(m))
+            raise FormatError("invalid magic {}".format(m))
         if verify and v != VERSION:
-            raise ValueError("invalid version {}".format(v))
-        if verify and pad != 0:
-            raise ValueError("invalid padding")
+            raise FormatError("invalid version {}".format(v))
+        if verify and flags != 0:
+            raise FormatError("unsupported flags")
         return cls(v, off)
 
     @classmethod
@@ -68,7 +70,7 @@ class FileHeader:
         if self.length >= HEADER_FORMAT.size + TRAILER_FORMAT.size:
             return self.length - TRAILER_FORMAT.size
         elif self.length > 0:
-            raise ValueError("file size {} not enough for BinPickle".format(self.length))
+            raise FormatError("file size {} not enough for BinPickle".format(self.length))
         else:
             return None  # We do not know the file size
 

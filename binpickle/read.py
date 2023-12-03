@@ -9,6 +9,7 @@ import pickle
 import msgpack
 
 from binpickle.encode import resolve_codec
+from binpickle.errors import FormatError, IntegrityError
 
 from .format import FileHeader, IndexEntry, FileTrailer
 from ._util import hash_buffer
@@ -118,7 +119,7 @@ class BinPickleFile:
     def _read_index(self) -> None:
         tpos = self.header.trailer_pos()
         if tpos is None:
-            raise ValueError("no file length, corrupt binpickle file?")
+            raise FormatError("no file length, corrupt binpickle file?")
         assert self._mv is not None, "file not open"
 
         buf = self._mv[tpos:]
@@ -178,7 +179,7 @@ class BinPickleFile:
             _log.debug("verifying %s", msg)
             bhash = hash_buffer(buf)
             if bhash != hash:
-                raise ValueError(f"{msg} has incorrect hash, corrupt file?")
+                raise IntegrityError(f"{msg} has incorrect hash, corrupt file?")
 
 
 def load(file: str | PathLike) -> object:

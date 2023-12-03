@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from binpickle import dump, BinPickleFile
+from binpickle.errors import IntegrityError
 
 _log = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ def test_verfy_index(tmp_path, rng: np.random.Generator):
         f.write(b"XX")
 
     # try to read the file
-    with pytest.raises(ValueError, match=r"incorrect hash"):
+    with pytest.raises(IntegrityError, match=r"incorrect hash"):
         with BinPickleFile(file) as _bpf:
             pass
 
@@ -61,5 +62,5 @@ def test_verfy_buffer(tmp_path, rng: np.random.Generator):
 
     # try to read the file
     with BinPickleFile(file) as bpf:
-        with pytest.raises(ValueError, match=r"incorrect hash"):
+        with pytest.raises(IntegrityError, match=r"incorrect hash"):
             bpf.load()
