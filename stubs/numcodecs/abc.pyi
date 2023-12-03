@@ -1,6 +1,5 @@
 from abc import ABC
-from typing import Optional, Self
-from typing_extensions import Buffer
+from typing_extensions import Buffer, Optional, Self
 
 class Codec(ABC):
     codec_id: Optional[str]
