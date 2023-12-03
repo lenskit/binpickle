@@ -22,7 +22,7 @@ def resolve_codec(codec: CodecSpec) -> Codec:
 
 
 @overload
-def resolve_codec(codec: CodecArg, buf: None) -> ResolvedCodec:
+def resolve_codec(codec: CodecArg) -> ResolvedCodec:
     ...
 
 
