@@ -174,6 +174,7 @@ def test_pickle_frame_dyncodec(tmp_path, rng: np.random.Generator):
         assert all(df2["count"] == df["count"])
         assert all(df2["score"].astype("f4") == df["score"].astype("f4"))
         del df2
+        assert bpf.entries[0].info
 
 
 def test_dump_frame(tmp_path, rng: np.random.Generator):
