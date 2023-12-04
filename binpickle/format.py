@@ -5,6 +5,7 @@ Constants and functions defining the binpickle format.
 from dataclasses import dataclass, field, fields
 import struct
 from typing import TypeAlias
+import enum
 
 from binpickle.errors import FormatError
 
@@ -25,6 +26,21 @@ HEADER_FORMAT = struct.Struct("!4sHHq")
 TRAILER_FORMAT = struct.Struct("!QL32s")
 
 
+class Flags(enum.Flag):
+    """
+    Flags that can be set in the BinPickle header.
+    """
+
+    BIG_ENDIAN = 1
+    """
+    This file was created on a big-endian system; if absent, the data is in little-endian.
+
+    Note that this affects only the serialized buffer data; it does **not** affect the lengths
+    and offsets in the file format, which are always stored in network byte order (big-endian)
+    or encoded with MsgPack.
+    """
+
+
 @dataclass
 class FileHeader:
     """
@@ -32,7 +48,7 @@ class FileHeader:
     magic (``BPCK``) followed by version and offset information:
 
     1. File version (2 bytes, big-endian).
-    2. Flags (2 bytes). Currently no flags are defined, so this is set to 0.
+    2. Flags (2 bytes), as defined in :class:`Flags`.
     3. File length (8 bytes, big-endian).  Length is signed; if the file length is not known,
        this field is set to -1.
     """
@@ -41,12 +57,13 @@ class FileHeader:
 
     version: int = VERSION
     "The NumPy file version."
+    flags: Flags = Flags(0)
     length: int = -1
     "The length of the file (-1 for unknown)."
 
     def encode(self):
         "Encode the file header as bytes."
-        return HEADER_FORMAT.pack(MAGIC, self.version, 0, self.length)
+        return HEADER_FORMAT.pack(MAGIC, self.version, self.flags._value_, self.length)
 
     @classmethod
     def decode(cls, buf: bytes, *, verify=True):
@@ -59,9 +76,11 @@ class FileHeader:
             raise FormatError("invalid magic {}".format(m))
         if verify and v != VERSION:
             raise FormatError("invalid version {}".format(v))
-        if verify and flags != 0:
-            raise FormatError("unsupported flags")
-        return cls(v, off)
+        try:
+            flags = Flags(flags)
+        except ValueError as e:
+            raise FormatError("unsupported flags", e)
+        return cls(v, flags, off)
 
     @classmethod
     def read(cls, file, **kwargs):
