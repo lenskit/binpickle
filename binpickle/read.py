@@ -148,7 +148,9 @@ class BinPickleFile:
         if sys.byteorder == "little" and Flags.BIG_ENDIAN in self.header.flags:
             raise FormatError("attempting to load big-endian file on little-endian host")
         if self.direct and Flags.MAPPABLE not in self.header.flags:
-            warnings.warn("direct mode reqested but file is not marked as mappable", FormatWarning)
+            warnings.warn(
+                "direct mode reqested but file is not marked as mappable", FormatWarning, 3
+            )
 
     def _read_index(self) -> None:
         tpos = self.header.trailer_pos()

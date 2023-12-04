@@ -12,6 +12,7 @@ import pytest
 from hypothesis import given, assume, settings
 import hypothesis.strategies as st
 from hypothesis.extra.numpy import arrays, scalar_dtypes
+from binpickle.errors import FormatWarning
 
 from binpickle.read import BinPickleFile, load
 from binpickle.write import BinPickler, dump
@@ -216,6 +217,11 @@ def test_compress_many_arrays(a):
             a2 = bpf.load()
             assert len(a2) == len(a)
             assert all(a2 == a)
+
+        # make sure we get a warning when opening a compressed file as direct
+        with pytest.warns(FormatWarning):
+            with BinPickleFile(file, direct=True) as bpf:
+                assert not bpf.find_errors()
 
 
 @settings(deadline=None)
