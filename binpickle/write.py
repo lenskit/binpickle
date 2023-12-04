@@ -42,11 +42,19 @@ class BinPickler:
             The path to the file to write.
         align(bool):
             If ``True``, align buffers to the page size.
-        codec:
-            The codec to use for encoding buffers.  This can be anything that can be
-            passed to :func:`binpickle.codecs.make_codec`, or it can be a function
-            that takes a buffer and returns the codec to use for that buffer (to
-            use different codecs for different types or sizes of buffers).
+        codecs:
+            The list of codecs to use for encoding buffers.  The codecs are
+            applied in sequence to encode a buffer, and in reverse order to
+            decode the buffer.  There are 4 ways to specify a codec:
+
+            * A :class:`numcodecs.abc.Codec` instance.
+            * A dictionary specifying a codec configuration, suitable for
+              use by :func:`numcodecs.get_config`.
+            * A string, which is used as a codec ID to look up the codec (the
+              ``id`` field recognized by :func:`~numcodecs.get_config`)
+            * A function that takes a buffer and returns any of the above (or
+              ``None``, to skip the step for that buffer), allowing encoding
+              to vary from buffer to buffer.
     """
 
     filename: str | PathLike
