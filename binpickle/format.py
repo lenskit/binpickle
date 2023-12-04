@@ -40,6 +40,11 @@ class Flags(enum.Flag):
     or encoded with MsgPack.
     """
 
+    MAPPABLE = 2
+    """
+    This file is designed to be memory-mapped.
+    """
+
 
 @dataclass
 class FileHeader:

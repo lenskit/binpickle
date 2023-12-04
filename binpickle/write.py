@@ -133,6 +133,8 @@ class BinPickler:
         h = FileHeader()
         if sys.byteorder == "big":
             h.flags |= Flags.BIG_ENDIAN
+        if self.align and not self.codecs:
+            h.flags |= Flags.MAPPABLE
         _log.debug("initializing header for %s: %s", self.filename, h)
         self._file.write(h.encode())
         assert self._file.tell() == pos + FileHeader.SIZE
