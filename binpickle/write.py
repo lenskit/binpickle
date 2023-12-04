@@ -42,7 +42,7 @@ class BinPickler:
             The path to the file to write.
         align(bool):
             If ``True``, align buffers to the page size.
-        codecs:
+        codecs(list of CodecArg):
             The list of codecs to use for encoding buffers.  The codecs are
             applied in sequence to encode a buffer, and in reverse order to
             decode the buffer.  There are 4 ways to specify a codec:
