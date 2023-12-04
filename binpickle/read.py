@@ -44,17 +44,18 @@ class BinPickleFile:
     Args:
         filename(str or pathlib.Path):
             The name of the file to load.
-        direct(bool):
+        direct(bool or str):
             If ``True``, returned objects zero-copy when possible, but cannot
             outlast the :class:`BinPickleFile` instance.  If ``False``, they
             are copied from the file and do not need to be freed before
-            :meth:`close` is called.
+            :meth:`close` is called.  If the string ``'nowarn'``, open in
+            direct mode but do not warn if the file is unmappable.
         verify(bool):
             If ``True`` (the default), verify file checksums while reading.
     """
 
     filename: str | PathLike
-    direct: bool
+    direct: bool | str
     verify: bool
     header: FileHeader
     trailer: FileTrailer
@@ -63,7 +64,7 @@ class BinPickleFile:
     _index_buf: Optional[memoryview]
     entries: list[IndexEntry]
 
-    def __init__(self, filename, *, direct: bool = False, verify: bool = True):
+    def __init__(self, filename, *, direct: bool | str = False, verify: bool = True):
         self.filename = filename
         self.direct = direct
         self.verify = verify
@@ -147,7 +148,7 @@ class BinPickleFile:
             raise FormatError("attempting to load little-endian file on big-endian host")
         if sys.byteorder == "little" and Flags.BIG_ENDIAN in self.header.flags:
             raise FormatError("attempting to load big-endian file on little-endian host")
-        if self.direct and Flags.MAPPABLE not in self.header.flags:
+        if self.direct and self.direct != "nowarn" and Flags.MAPPABLE not in self.header.flags:
             warnings.warn(
                 "direct mode reqested but file is not marked as mappable", FormatWarning, 3
             )
@@ -183,8 +184,8 @@ class BinPickleFile:
         start = entry.offset
         length = entry.enc_length
         end = start + length
-        if direct is None:
-            direct = self.direct
+        if direct is None and self.direct:
+            direct = True
 
         buf = self._mv[start:end]
         try:
