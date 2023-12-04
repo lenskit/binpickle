@@ -1,5 +1,6 @@
 import mmap
 from os import PathLike
+import sys
 import warnings
 import logging
 import io
@@ -11,7 +12,7 @@ from typing_extensions import Buffer, List, Optional, Self
 
 import numpy as np
 
-from .format import CodecSpec, FileHeader, FileTrailer, IndexEntry
+from .format import CodecSpec, FileHeader, FileTrailer, Flags, IndexEntry
 from .encode import ResolvedCodec, resolve_codec, CodecArg
 from ._util import human_size
 
@@ -130,7 +131,9 @@ class BinPickler:
         if pos > 0:
             warnings.warn("BinPickler not at beginning of file")
         h = FileHeader()
-        _log.debug("initializing header for %s", self.filename)
+        if sys.byteorder == "big":
+            h.flags |= Flags.BIG_ENDIAN
+        _log.debug("initializing header for %s: %s", self.filename, h)
         self._file.write(h.encode())
         assert self._file.tell() == pos + FileHeader.SIZE
 
