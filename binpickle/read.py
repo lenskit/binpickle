@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass
 from enum import Enum
 import hashlib
@@ -8,12 +9,13 @@ from os import PathLike
 from typing import Optional
 from typing_extensions import Buffer
 import pickle
+import warnings
 import msgpack
 
 from binpickle.encode import resolve_codec
-from binpickle.errors import BinPickleError, FormatError, IntegrityError
+from binpickle.errors import BinPickleError, FormatError, FormatWarning, IntegrityError
 
-from .format import FileHeader, IndexEntry, FileTrailer
+from .format import FileHeader, Flags, IndexEntry, FileTrailer
 from ._util import hash_buffer
 
 _log = logging.getLogger(__name__)
@@ -42,17 +44,18 @@ class BinPickleFile:
     Args:
         filename(str or pathlib.Path):
             The name of the file to load.
-        direct(bool):
+        direct(bool or str):
             If ``True``, returned objects zero-copy when possible, but cannot
             outlast the :class:`BinPickleFile` instance.  If ``False``, they
             are copied from the file and do not need to be freed before
-            :meth:`close` is called.
+            :meth:`close` is called.  If the string ``'nowarn'``, open in
+            direct mode but do not warn if the file is unmappable.
         verify(bool):
             If ``True`` (the default), verify file checksums while reading.
     """
 
     filename: str | PathLike
-    direct: bool
+    direct: bool | str
     verify: bool
     header: FileHeader
     trailer: FileTrailer
@@ -61,12 +64,12 @@ class BinPickleFile:
     _index_buf: Optional[memoryview]
     entries: list[IndexEntry]
 
-    def __init__(self, filename, *, direct: bool = False, verify: bool = True):
+    def __init__(self, filename, *, direct: bool | str = False, verify: bool = True):
         self.filename = filename
         self.direct = direct
         self.verify = verify
-        with open(filename, "rb") as bpf:
-            self.header = FileHeader.read(bpf)
+        with open(filename, "rb", buffering=0) as bpf:
+            self._read_header(bpf)
             self._map = mmap.mmap(bpf.fileno(), self.header.length, access=mmap.ACCESS_READ)
         self._mv = memoryview(self._map)
         self._read_index()
@@ -139,6 +142,17 @@ class BinPickleFile:
             self._map.close()
             self._map = None
 
+    def _read_header(self, bpf: io.FileIO) -> None:
+        self.header = FileHeader.read(bpf)
+        if sys.byteorder == "big" and Flags.BIG_ENDIAN not in self.header.flags:
+            raise FormatError("attempting to load little-endian file on big-endian host")
+        if sys.byteorder == "little" and Flags.BIG_ENDIAN in self.header.flags:
+            raise FormatError("attempting to load big-endian file on little-endian host")
+        if self.direct and self.direct != "nowarn" and Flags.MAPPABLE not in self.header.flags:
+            warnings.warn(
+                "direct mode reqested but file is not marked as mappable", FormatWarning, 3
+            )
+
     def _read_index(self) -> None:
         tpos = self.header.trailer_pos()
         if tpos is None:
@@ -170,8 +184,8 @@ class BinPickleFile:
         start = entry.offset
         length = entry.enc_length
         end = start + length
-        if direct is None:
-            direct = self.direct
+        if direct is None and self.direct:
+            direct = True
 
         buf = self._mv[start:end]
         try:

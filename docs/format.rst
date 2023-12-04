@@ -44,6 +44,8 @@ Classes
 
 .. autoclass:: FileHeader
 
+.. autoclass:: Flags
+
 .. autoclass:: FileTrailer
 
 .. autoclass:: IndexEntry

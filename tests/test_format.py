@@ -1,7 +1,7 @@
 from pytest import raises
 
 from binpickle.errors import FormatError
-from binpickle.format import FileHeader, FileTrailer, HEADER_FORMAT, TRAILER_FORMAT
+from binpickle.format import FileHeader, FileTrailer, HEADER_FORMAT, TRAILER_FORMAT, Flags
 
 
 def test_format_sizes():
@@ -37,6 +37,17 @@ def test_size_round_trip():
     assert h2 == h
 
 
+def test_flags_round_trip():
+    h = FileHeader(length=57, flags=Flags.BIG_ENDIAN)
+    bs = h.encode()
+    assert len(bs) == 16
+
+    h2 = FileHeader.decode(bs)
+    assert h2.length == 57
+    assert h2.flags == Flags.BIG_ENDIAN
+    assert h2 == h
+
+
 def test_catch_bad_magic():
     with raises(FormatError) as exc:
         FileHeader.decode(b"BNPQ\x00\x00\x00\x00" + (b"\x00" * 8))
@@ -49,7 +60,7 @@ def test_catch_bad_version():
     assert "invalid version" in str(exc.value)
 
 
-def test_catch_bad_padding():
+def test_catch_bad_flags():
     with raises(FormatError) as exc:
         FileHeader.decode(b"BPCK\x00\x02\x00\xff" + (b"\x00" * 8))
     assert "unsupported flags" in str(exc.value)
