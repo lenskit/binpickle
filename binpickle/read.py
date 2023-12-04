@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass
 from enum import Enum
 import hashlib
@@ -13,7 +14,7 @@ import msgpack
 from binpickle.encode import resolve_codec
 from binpickle.errors import BinPickleError, FormatError, IntegrityError
 
-from .format import FileHeader, IndexEntry, FileTrailer
+from .format import FileHeader, Flags, IndexEntry, FileTrailer
 from ._util import hash_buffer
 
 _log = logging.getLogger(__name__)
@@ -65,8 +66,8 @@ class BinPickleFile:
         self.filename = filename
         self.direct = direct
         self.verify = verify
-        with open(filename, "rb") as bpf:
-            self.header = FileHeader.read(bpf)
+        with open(filename, "rb", buffering=0) as bpf:
+            self._read_header(bpf)
             self._map = mmap.mmap(bpf.fileno(), self.header.length, access=mmap.ACCESS_READ)
         self._mv = memoryview(self._map)
         self._read_index()
@@ -138,6 +139,13 @@ class BinPickleFile:
         if self._map is not None:
             self._map.close()
             self._map = None
+
+    def _read_header(self, bpf: io.FileIO) -> None:
+        self.header = FileHeader.read(bpf)
+        if sys.byteorder == "big" and Flags.BIG_ENDIAN not in self.header.flags:
+            raise FormatError("attempting to load little-endian file on big-endian host")
+        if sys.byteorder == "little" and Flags.BIG_ENDIAN in self.header.flags:
+            raise FormatError("attempting to load big-endian file on little-endian host")
 
     def _read_index(self) -> None:
         tpos = self.header.trailer_pos()
