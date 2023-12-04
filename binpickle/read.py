@@ -9,10 +9,11 @@ from os import PathLike
 from typing import Optional
 from typing_extensions import Buffer
 import pickle
+import warnings
 import msgpack
 
 from binpickle.encode import resolve_codec
-from binpickle.errors import BinPickleError, FormatError, IntegrityError
+from binpickle.errors import BinPickleError, FormatError, FormatWarning, IntegrityError
 
 from .format import FileHeader, Flags, IndexEntry, FileTrailer
 from ._util import hash_buffer
@@ -146,6 +147,8 @@ class BinPickleFile:
             raise FormatError("attempting to load little-endian file on big-endian host")
         if sys.byteorder == "little" and Flags.BIG_ENDIAN in self.header.flags:
             raise FormatError("attempting to load big-endian file on little-endian host")
+        if self.direct and Flags.MAPPABLE not in self.header.flags:
+            warnings.warn("direct mode reqested but file is not marked as mappable", FormatWarning)
 
     def _read_index(self) -> None:
         tpos = self.header.trailer_pos()
