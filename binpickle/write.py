@@ -1,20 +1,20 @@
+import hashlib
+import io
+import logging
 import mmap
-from os import PathLike
+import pickle
 import sys
 import warnings
-import logging
-import io
-import hashlib
-import pickle
-import msgpack
+from os import PathLike
+from typing import Any
 
+import msgpack
+import numpy as np
 from typing_extensions import Buffer, List, Optional, Self
 
-import numpy as np
-
-from .format import CodecSpec, FileHeader, FileTrailer, Flags, IndexEntry
-from .encode import ResolvedCodec, resolve_codec, CodecArg
 from ._util import human_size
+from .encode import CodecArg, ResolvedCodec, resolve_codec
+from .format import CodecSpec, FileHeader, FileTrailer, Flags, IndexEntry
 
 _log = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class BinPickler:
               to vary from buffer to buffer.
     """
 
-    filename: str | PathLike
+    filename: str | PathLike[str]
     align: bool
     codecs: list[ResolvedCodec]
     entries: List[IndexEntry]
@@ -66,9 +66,9 @@ class BinPickler:
 
     def __init__(
         self,
-        filename: str | PathLike,
+        filename: str | PathLike[str],
         *,
-        align=False,
+        align: bool = False,
         codecs: Optional[list[CodecArg]] = None,
     ):
         self.filename = filename
@@ -85,12 +85,12 @@ class BinPickler:
         self._init_header()
 
     @classmethod
-    def mappable(cls, filename: str | PathLike):
+    def mappable(cls, filename: str | PathLike[str]):
         "Convenience method to construct a pickler for memory-mapped use."
         return cls(filename, align=True)
 
     @classmethod
-    def compressed(cls, filename: str | PathLike, codec: CodecArg = "gzip"):
+    def compressed(cls, filename: str | PathLike[str], codec: CodecArg = "gzip"):
         "Convenience method to construct a pickler for compressed storage."
         return cls(filename, codecs=[codec])
 
@@ -122,7 +122,7 @@ class BinPickler:
     def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any):
         self.close()
         return False
 
@@ -217,7 +217,13 @@ class BinPickler:
         self._file.flush()
 
 
-def dump(obj, file: str | PathLike, *, mappable: bool = False, codecs: list[CodecArg] = ["gzip"]):
+def dump(
+    obj: object,
+    file: str | PathLike[str],
+    *,
+    mappable: bool = False,
+    codecs: list[CodecArg] = ["gzip"],
+):
     """
     Dump an object to a BinPickle file.  This is a convenience wrapper
     around :class:`BinPickler`.

@@ -2,7 +2,9 @@
   "mypy-type-checker.reportingScope": "workspace",
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
-    "editor.codeActionsOnSave": {"source.organizeImports": true},
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    },
     "editor.formatOnSave": true,
   },
   "python.analysis.typeCheckingMode": "strict"

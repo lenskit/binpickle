@@ -2,10 +2,10 @@
 Optimized format for pickling binary data.
 """
 
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 
-from .write import dump, BinPickler
-from .read import load, BinPickleFile, file_info
+from .read import BinPickleFile, file_info, load
+from .write import BinPickler, dump
 
 try:
     __version__ = version("binpickle")
