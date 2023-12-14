@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: 📥 Check out source code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -33,7 +33,7 @@ jobs:
     - name: 🪮 Check source code formatting
       id: format
       run: |
-        if pipx run ruff format --diff $PKG_DIR; then
+        if ruff format --diff $PKG_DIR; then
           echo passed=yes >>"$GITHUB_OUTPUT"
         else
           echo passed=no >>"$GITHUB_OUTPUT"
@@ -45,7 +45,7 @@ jobs:
     - name: 🐜 Check source code lint rules
       id: lint
       run: |
-        if pipx run ruff check --output-format=github $PKG_DIR; then
+        if ruff check --output-format=github $PKG_DIR; then
           echo passed=yes >>"$GITHUB_OUTPUT"
         else
           echo passed=no >>"$GITHUB_OUTPUT"
@@ -54,7 +54,7 @@ jobs:
       env:
         PKG_DIR: binpickle
 
-    - name: 🧾 Checking results
+    - name: 🧾 Checking lint and format results
       run: |
         if [ "$FMT_PASSED" = no ]; then
             echo "::error::format failed, failing build"
@@ -72,3 +72,11 @@ jobs:
         FMT_PASSED: ${{ steps.fmt.outputs.passed }}
         LINT_PASSED: ${{ steps.lint.outputs.passed }}
         LINT_REQUIRED: True
+
+    
+    - name: 📐 Check types
+      id: typecheck
+      uses: jakebailey/pyright-action@v1
+      with:
+        extra-args: binpickle
+    
