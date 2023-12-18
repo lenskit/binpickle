@@ -40,7 +40,7 @@ jobs:
             echo "::error::source code not formatted"
           fi
         env:
-          PKG_DIR: { { package_name } }
+          PKG_DIR: binpickle
 
       - name: 🐜 Check source code lint rules
         id: lint
@@ -52,7 +52,7 @@ jobs:
             echo "::error::source code lint check failed"
           fi
         env:
-          PKG_DIR: { { package_name } }
+          PKG_DIR: binpickle
 
       - name: 🧾 Checking lint and format results
         run: |
@@ -71,12 +71,12 @@ jobs:
         env:
           FMT_PASSED: ${{ steps.fmt.outputs.passed }}
           LINT_PASSED: ${{ steps.lint.outputs.passed }}
-          LINT_REQUIRED: { { require_lint } }
+          LINT_REQUIRED: True
 
       
       - name: 📐 Check types
         id: typecheck
         uses: jakebailey/pyright-action@v1
         with:
-          extra-args: { { package_name } }
+          extra-args: binpickle
       
