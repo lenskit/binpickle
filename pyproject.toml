@@ -13,6 +13,7 @@ classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Operating System :: OS Independent",
 ]
 requires-python = ">= 3.10"
@@ -32,8 +33,10 @@ dev = [
   "build",
   "twine",
   "ruff",
-  "mypy ~=1.5",
+  "pyright",
   "copier",
+  "ipython",
+  "pyproject2conda",
   "sphinx-autobuild",
   "humanize ~=4.0",
   "msgpack-types",  # p2c: -p
@@ -70,6 +73,7 @@ channels = ["conda-forge"]
 [tool.ruff]
 line-length = 100
 target-version = "py310"
+select = ["E", "F", "I"]
 exclude = [
   ".git",
   "__pycache__",
@@ -78,6 +82,20 @@ exclude = [
   "dist",
 ]
 
+[tool.ruff.lint.isort]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[tool.ruff.lint.isort.sections]
+test = ["pytest", "hypothesis"]
+
 [tool.mypy]
-mypy_path = "$MYPY_CONFIG_FILE_DIR/stubs"
 exclude = "^docs/"
+
+[tool.pyright]
+typeCheckingMode = "strict"
+exclude = [
+  "docs/*",
+]
+reportUnnecessaryIsInstance = false
+reportMissingImports = true
+reportMissingTypeStubs = false

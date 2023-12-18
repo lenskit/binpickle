@@ -2,10 +2,13 @@
 Constants and functions defining the binpickle format.
 """
 
-from dataclasses import dataclass, field, fields
-import struct
-from typing import TypeAlias
+from __future__ import annotations
+
 import enum
+import io
+import struct
+from dataclasses import dataclass, field, fields
+from typing import Any, TypeAlias
 
 from binpickle.errors import FormatError
 
@@ -71,7 +74,7 @@ class FileHeader:
         return HEADER_FORMAT.pack(MAGIC, self.version, self.flags._value_, self.length)
 
     @classmethod
-    def decode(cls, buf: bytes, *, verify=True):
+    def decode(cls, buf: bytes | bytearray | memoryview, *, verify: bool = True) -> FileHeader:
         "Decode a file header from bytes."
         if len(buf) != HEADER_FORMAT.size:
             raise FormatError("incorrect header length")
@@ -88,7 +91,7 @@ class FileHeader:
         return cls(v, flags, off)
 
     @classmethod
-    def read(cls, file, **kwargs):
+    def read(cls, file: io.FileIO | io.BufferedReader, **kwargs: bool) -> FileHeader:
         buf = file.read(HEADER_FORMAT.size)
         return cls.decode(buf, **kwargs)
 
@@ -125,7 +128,7 @@ class FileTrailer:
         return TRAILER_FORMAT.pack(self.offset, self.length, self.hash)
 
     @classmethod
-    def decode(cls, buf, *, verify=True):
+    def decode(cls, buf: bytes | bytearray | memoryview, *, verify: bool = True) -> FileTrailer:
         "Decode a file trailer from bytes."
         off, len, ck = TRAILER_FORMAT.unpack(buf)
         return cls(off, len, ck)
@@ -155,7 +158,7 @@ class IndexEntry:
         return dict((f.name, getattr(self, f.name)) for f in fields(self))
 
     @classmethod
-    def from_repr(cls, repr):
+    def from_repr(cls, repr: dict[str, Any]):
         "Convert an index entry from its MsgPack-compatible representation"
         if not isinstance(repr, dict):
             raise TypeError("IndexEntry representation must be a dict")

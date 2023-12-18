@@ -3,11 +3,12 @@ Support for encoding and decoding.
 """
 
 from __future__ import annotations
-from typing import Optional, TypeAlias, Callable, overload
-from typing_extensions import Buffer
+
+from typing import Callable, Optional, TypeAlias, overload
 
 from numcodecs.abc import Codec
 from numcodecs.registry import get_codec
+from typing_extensions import Buffer
 
 from binpickle.format import CodecSpec
 

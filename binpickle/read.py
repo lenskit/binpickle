@@ -1,22 +1,23 @@
+import hashlib
+import io
+import logging
+import mmap
+import pickle
 import sys
+import warnings
 from dataclasses import dataclass
 from enum import Enum
-import hashlib
-import mmap
-import logging
-import io
 from os import PathLike
-from typing import Optional
-from typing_extensions import Buffer
-import pickle
-import warnings
+from typing import Any, Optional
+
 import msgpack
+from typing_extensions import Buffer
 
 from binpickle.encode import resolve_codec
 from binpickle.errors import BinPickleError, FormatError, FormatWarning, IntegrityError
 
-from .format import FileHeader, Flags, IndexEntry, FileTrailer
 from ._util import hash_buffer
+from .format import FileHeader, FileTrailer, Flags, IndexEntry
 
 _log = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class BinPickleFile:
             If ``True`` (the default), verify file checksums while reading.
     """
 
-    filename: str | PathLike
+    filename: str | PathLike[str]
     direct: bool | str
     verify: bool
     header: FileHeader
@@ -64,7 +65,9 @@ class BinPickleFile:
     _index_buf: Optional[memoryview]
     entries: list[IndexEntry]
 
-    def __init__(self, filename, *, direct: bool | str = False, verify: bool = True):
+    def __init__(
+        self, filename: str | PathLike[str], *, direct: bool | str = False, verify: bool = True
+    ):
         self.filename = filename
         self.direct = direct
         self.verify = verify
@@ -77,7 +80,7 @@ class BinPickleFile:
     def __enter__(self):
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: Any):
         self.close()
         return False
 
@@ -110,7 +113,7 @@ class BinPickleFile:
         invalid msgpack formats in the index won't be detected here.  This method checks
         buffer hashes, offset overlaps, and such.
         """
-        errors = []
+        errors: list[str] = []
         assert self._index_buf is not None, "file not loaded"
 
         i_sum = hashlib.sha256(self._index_buf).digest()
@@ -173,7 +176,7 @@ class BinPickleFile:
             self._index_buf = None
             raise e
 
-        self.entries = [IndexEntry.from_repr(e) for e in msgpack.unpackb(self._index_buf)]
+        self.entries = [IndexEntry.from_repr(e) for e in msgpack.unpackb(self._index_buf)]  # type: ignore
         _log.debug("read %d entries from file", len(self.entries))
 
     def _read_buffer(
@@ -219,7 +222,7 @@ class BinPickleFile:
                 raise IntegrityError(f"{msg} has incorrect hash, corrupt file?")
 
 
-def load(file: str | PathLike) -> object:
+def load(file: str | PathLike[str]) -> object:
     """
     Load an object from a BinPickle file.
 
@@ -231,7 +234,7 @@ def load(file: str | PathLike) -> object:
         return bpf.load()
 
 
-def file_info(file: str | PathLike) -> BPKInfo:
+def file_info(file: str | PathLike[str]) -> BPKInfo:
     """
     Test whether a file is a BinPickle file, and if so, return basic information
     about it.
