@@ -69,7 +69,7 @@ jobs:
               fi
           fi
         env:
-          FMT_PASSED: ${{ steps.fmt.outputs.passed }}
+          FMT_PASSED: ${{ steps.format.outputs.passed }}
           LINT_PASSED: ${{ steps.lint.outputs.passed }}
           LINT_REQUIRED: True
 
