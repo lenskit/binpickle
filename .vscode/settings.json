@@ -3,10 +3,17 @@
   "[python]": {
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit"
+        "source.organizeImports": true
     },
     "editor.formatOnSave": true,
   },
-  "python.analysis.typeCheckingMode": "strict"
-
+  "[jsonc]": {
+    "editor.formatOnSave": true,
+  },
+  "[yaml]": {
+    "editor.formatOnSave": true,
+  },
+  "[toml]": {
+    "editor.formatOnSave": true,
+  },
 }
