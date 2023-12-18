@@ -173,7 +173,7 @@ class BinPickler:
 
         binfo = None
         if isinstance(mv.obj, np.ndarray):
-            binfo = ("ndarray", str(mv.obj.dtype), mv.obj.shape)
+            binfo = ("ndarray", str(mv.obj.dtype), mv.obj.shape)  # type: ignore
 
         _log.debug("writing %d bytes at position %d", length, offset)
         buf, c_spec = self._encode_buffer(buf)
