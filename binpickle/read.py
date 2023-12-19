@@ -43,15 +43,15 @@ class BinPickleFile:
     Class representing a binpickle file in memory.
 
     Args:
-        filename(str or pathlib.Path):
+        filename:
             The name of the file to load.
-        direct(bool or str):
+        direct:
             If ``True``, returned objects zero-copy when possible, but cannot
             outlast the :class:`BinPickleFile` instance.  If ``False``, they
             are copied from the file and do not need to be freed before
             :meth:`close` is called.  If the string ``'nowarn'``, open in
             direct mode but do not warn if the file is unmappable.
-        verify(bool):
+        verify:
             If ``True`` (the default), verify file checksums while reading.
     """
 
@@ -227,7 +227,7 @@ def load(file: str | PathLike[str]) -> object:
     Load an object from a BinPickle file.
 
     Args:
-        file(str or pathlib.Path): The file to load.
+        file: The file to load.
     """
 
     with BinPickleFile(file) as bpf:
@@ -238,6 +238,9 @@ def file_info(file: str | PathLike[str]) -> BPKInfo:
     """
     Test whether a file is a BinPickle file, and if so, return basic information
     about it.
+
+    Args:
+        file: the path to the file to test.
     """
     try:
         with open(file, "rb") as f:
