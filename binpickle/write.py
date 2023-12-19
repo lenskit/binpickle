@@ -28,7 +28,7 @@ def _align_pos(pos: int, size: int = mmap.PAGESIZE) -> int:
         return pos
 
 
-class BinPickler:
+class BinPickler(pickle.Pickler):
     """
     Save an object into a binary pickle file.  This is like :class:`pickle.Pickler`,
     except it works on file paths instead of byte streams.
@@ -37,6 +37,9 @@ class BinPickler:
 
         with BinPickler('file.bpk') as bpk:
             bpk.dump(obj)
+
+    Only one object can be dumped to a `BinPickler`.  Other methods are exposed
+    for manually constructing BinPickle files but their use is highly discouraged.
 
     Args:
         filename(str or pathlib.Path):
@@ -58,6 +61,7 @@ class BinPickler:
               to vary from buffer to buffer.
     """
 
+    _pickle_stream: io.BytesIO
     filename: str | PathLike[str]
     align: bool
     codecs: list[ResolvedCodec]
@@ -71,10 +75,16 @@ class BinPickler:
         align: bool = False,
         codecs: Optional[list[CodecArg]] = None,
     ):
+        self._pickle_stream = io.BytesIO()
         self.filename = filename
         self.align = align
         self._file = open(filename, "wb")
         self.entries = []
+
+        # set up the binpickler
+        super().__init__(
+            self._pickle_stream, pickle.HIGHEST_PROTOCOL, buffer_callback=self._write_buffer
+        )
 
         if codecs is None:
             self.codecs = []
@@ -96,12 +106,8 @@ class BinPickler:
 
     def dump(self, obj: object) -> None:
         "Dump an object to the file. Can only be called once."
-        bio = io.BytesIO()
-        pk = pickle.Pickler(
-            bio, protocol=pickle.HIGHEST_PROTOCOL, buffer_callback=self._write_buffer
-        )
-        pk.dump(obj)
-        buf = bio.getbuffer()
+        super().dump(obj)
+        buf = self._pickle_stream.getbuffer()
 
         tot_enc = sum(e.enc_length for e in self.entries)
         tot_dec = sum(e.dec_length for e in self.entries)
