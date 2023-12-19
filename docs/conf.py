@@ -31,7 +31,7 @@ templates_path = ["_templates"]
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "numpy": ("https://docs.scipy.org/doc/numpy/", None),
-    "sklearn": ("https://scikit-learn.org/stable/", None),
+    "numcodecs": ("https://numcodecs.readthedocs.io/en/stable/", None),
 }
 
 autodoc_default_options = {
