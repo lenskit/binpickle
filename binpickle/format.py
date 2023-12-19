@@ -141,7 +141,13 @@ class FileTrailer:
 
     @classmethod
     def decode(cls, buf: bytes | bytearray | memoryview, *, verify: bool = True) -> FileTrailer:
-        "Decode a file trailer from bytes."
+        """
+        Decode a file trailer from bytes.
+
+        Args:
+            buf: Buffer containing the trailer to decode.
+            verify: Whether to verify invalid trailer data (currently ignored).
+        """
         off, len, ck = TRAILER_FORMAT.unpack(buf)
         return cls(off, len, ck)
 
