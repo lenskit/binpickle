@@ -75,7 +75,16 @@ class FileHeader:
 
     @classmethod
     def decode(cls, buf: bytes | bytearray | memoryview, *, verify: bool = True) -> FileHeader:
-        "Decode a file header from bytes."
+        """
+        Decode a file header from bytes.
+
+        Args:
+            buf:
+                Buffer contianing the file header to decode.
+            verify:
+                Whether to fail on invalid header data (such as mismatched magic
+                or unsupported version).
+        """
         if len(buf) != HEADER_FORMAT.size:
             raise FormatError("incorrect header length")
 
@@ -120,8 +129,11 @@ class FileTrailer:
     SIZE = TRAILER_FORMAT.size
 
     offset: int
+    "Position of the start of the file index."
     length: int
+    "Length of the file index."
     hash: bytes
+    "SHA-256 digest of the file index."
 
     def encode(self):
         "Encode the file trailer as bytes."
