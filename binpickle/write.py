@@ -42,11 +42,11 @@ class BinPickler(pickle.Pickler):
     for manually constructing BinPickle files but their use is highly discouraged.
 
     Args:
-        filename(str or pathlib.Path):
+        filename:
             The path to the file to write.
-        align(bool):
+        align:
             If ``True``, align buffers to the page size.
-        codecs(list of CodecArg):
+        codecs:
             The list of codecs to use for encoding buffers.  The codecs are
             applied in sequence to encode a buffer, and in reverse order to
             decode the buffer.  There are 4 ways to specify a codec:
@@ -244,8 +244,8 @@ def dump(
 
     Args:
         obj: The object to dump.
-        file(str or pathlib.Path): The file in which to save the object.
-        mappable(bool):
+        file: The file in which to save the object.
+        mappable:
             If ``True``, save for memory-mapping.  ``codec`` is ignored
             in this case.
         codecs:
