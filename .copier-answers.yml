@@ -1,5 +1,5 @@
 # Changes here will be overwritten by Copier
-_commit: 00050f1
+_commit: '8259712'
 _src_path: https://github.com/lenskit/lk-project-template
 package_name: binpickle
 project_descr: Optimized format for pickling binary data.
