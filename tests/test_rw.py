@@ -1,22 +1,23 @@
-import itertools as it
-from tempfile import TemporaryDirectory
-from pathlib import Path
 import gc
+import itertools as it
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+import numcodecs as nc
 import numpy as np
 import pandas as pd
-import numcodecs as nc
-from numcodecs.registry import codec_registry
 from numcodecs.abc import Codec
+from numcodecs.registry import codec_registry
 
-import pytest
-from hypothesis import given, assume, settings
 import hypothesis.strategies as st
+import pytest
+from hypothesis import assume, given, settings
 from hypothesis.extra.numpy import arrays, scalar_dtypes
-from binpickle.errors import FormatWarning
 
+from binpickle.errors import FormatWarning
+from binpickle.format import Flags
 from binpickle.read import BinPickleFile, load
 from binpickle.write import BinPickler, dump
-
 
 RW_CTORS = [
     BinPickler,
@@ -198,6 +199,22 @@ def test_dump_frame(tmp_path, rng: np.random.Generator):
         assert all(df2[c] == df[c])
 
 
+def test_mappable_flag(tmp_path: Path, rng: np.random.Generator):
+    file = tmp_path / "matrix.bpk"
+    mat = rng.uniform(size=10_000)
+    with BinPickler.mappable(file) as w:
+        w.dump(mat)
+
+    with BinPickleFile(file, direct=True) as bpf:
+        assert bpf.is_mappable
+        assert Flags.MAPPABLE in bpf.header.flags
+
+        m2 = bpf.load()
+        assert np.all(m2 == mat)
+
+        del m2
+
+
 @settings(deadline=None)
 @given(arrays(scalar_dtypes(), st.integers(500, 10000)))
 def test_compress_many_arrays(a):
@@ -238,6 +255,7 @@ def test_map_many_arrays(a):
         with BinPickleFile(file, direct=True) as bpf:
             assert not bpf.find_errors()
             assert bpf.is_mappable
+            assert Flags.MAPPABLE in bpf.header.flags
             assert len(bpf.entries) in (1, 2)
             a2 = bpf.load()
             assert len(a2) == len(a)

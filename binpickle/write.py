@@ -66,6 +66,7 @@ class BinPickler(pickle.Pickler):
     align: bool
     codecs: list[ResolvedCodec]
     entries: List[IndexEntry]
+    header: FileHeader | None
     _file: io.BufferedWriter
 
     def __init__(
@@ -136,13 +137,13 @@ class BinPickler(pickle.Pickler):
         pos = self._file.tell()
         if pos > 0:
             warnings.warn("BinPickler not at beginning of file")
-        h = FileHeader()
+        self.header = FileHeader()
         if sys.byteorder == "big":
-            h.flags |= Flags.BIG_ENDIAN
+            self.header.flags |= Flags.BIG_ENDIAN
         if self.align and not self.codecs:
-            h.flags |= Flags.MAPPABLE
-        _log.debug("initializing header for %s: %s", self.filename, h)
-        self._file.write(h.encode())
+            self.header.flags |= Flags.MAPPABLE
+        _log.debug("initializing header for %s: %s", self.filename, self.header)
+        self._file.write(self.header.encode())
         assert self._file.tell() == pos + FileHeader.SIZE
 
     def _encode_buffer(
@@ -217,9 +218,10 @@ class BinPickler(pickle.Pickler):
 
         pos = self._file.tell()
         _log.debug("finalizing file with length %d", pos)
-        h = FileHeader(length=pos)
+        assert self.header is not None
+        self.header.length = pos
         self._file.seek(0)
-        self._file.write(h.encode())
+        self._file.write(self.header.encode())
         self._file.flush()
 
 
