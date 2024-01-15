@@ -1,7 +1,7 @@
 # BinPickle - efficient binary pickled data
 
 [![PyPI version](https://badge.fury.io/py/binpickle.svg)](https://badge.fury.io/py/binpickle)
-![Test and Build](https://github.com/lenskit/binpickle/workflows/Test%20and%20Package/badge.svg)
+![Automated Tests](https://github.com/lenskit/binpickle/workflows/Automated%20Tests/badge.svg)
 [![codecov](https://codecov.io/gh/lenskit/binpickle/branch/master/graph/badge.svg)](https://codecov.io/gh/lenskit/binpickle)
 
 This package uses the new Pickle Protocol 5 added in Python 3.8 to efficiently
