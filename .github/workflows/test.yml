@@ -1,4 +1,4 @@
-name: Test and Package
+name: Automated Tests
 on:
   push:
     branches:
