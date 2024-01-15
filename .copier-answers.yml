@@ -1,6 +1,7 @@
 # Changes here will be overwritten by Copier
-_commit: '8259712'
+_commit: f8b65ae
 _src_path: https://github.com/lenskit/lk-project-template
+owner: Drexel University and contributors
 package_name: binpickle
 project_descr: Optimized format for pickling binary data.
 project_name: binpickle
