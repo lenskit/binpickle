@@ -77,6 +77,7 @@ class BinPickleFile:
         self.filename = filename
         self.direct = direct
         self.verify = verify
+        _log.debug("opening %s", filename)
         with open(filename, "rb", buffering=0) as bpf:
             self._read_header(bpf)
             self._map = mmap.mmap(bpf.fileno(), self.header.length, access=mmap.ACCESS_READ)
