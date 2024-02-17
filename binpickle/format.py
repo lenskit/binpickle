@@ -51,7 +51,7 @@ def pretty_codec(codec: CodecSpec | list[CodecSpec] | None) -> str:
         args = ["{}={}".format(k, repr(v)) for (k, v) in codec.items() if k != "id"]
         astr = ", ".join(args)
         return f"{name}({astr})"
-    else:
+    else:  # pragma: no cover
         raise TypeError("invalid codec")
 
 

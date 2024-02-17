@@ -72,6 +72,11 @@ version_scheme = "guess-next-dev"
 [tool.pyproject2conda]
 channels = ["conda-forge"]
 
+[tool.coverage.report]
+omit = [
+  "binpickle/__main__.py",
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"
