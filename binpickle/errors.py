@@ -4,6 +4,7 @@
 # Licensed under the MIT license, see LICENSE.md for details.
 # SPDX-License-Identifier: MIT
 
+
 class BinPickleError(Exception):
     """
     Base class for Binpickle errors.
