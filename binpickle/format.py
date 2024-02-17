@@ -35,6 +35,26 @@ HEADER_FORMAT = struct.Struct("!4sHHq")
 TRAILER_FORMAT = struct.Struct("!QL32s")
 
 
+def pretty_codec(codec: CodecSpec | list[CodecSpec] | None) -> str:
+    if codec is None:
+        return "none"
+    elif isinstance(codec, list):
+        if len(codec) == 0:
+            return pretty_codec(None)
+        elif len(codec) == 1:
+            return pretty_codec(codec[0])
+        else:
+            sp = [pretty_codec(c) for c in codec]
+            return "[" + ", ".join(sp) + "]"
+    elif isinstance(codec, dict):
+        name = codec["id"]
+        args = ["{}={}".format(k, repr(v)) for (k, v) in codec.items() if k != "id"]
+        astr = ", ".join(args)
+        return f"{name}({astr})"
+    else:  # pragma: no cover
+        raise TypeError("invalid codec")
+
+
 class Flags(enum.Flag):
     """
     Flags that can be set in the BinPickle header.

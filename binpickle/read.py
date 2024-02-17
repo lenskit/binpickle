@@ -77,6 +77,7 @@ class BinPickleFile:
         self.filename = filename
         self.direct = direct
         self.verify = verify
+        _log.debug("opening %s", filename)
         with open(filename, "rb", buffering=0) as bpf:
             self._read_header(bpf)
             self._map = mmap.mmap(bpf.fileno(), self.header.length, access=mmap.ACCESS_READ)
@@ -220,8 +221,10 @@ class BinPickleFile:
             _log.debug("copying %d bytes from %d", length, start)
             return buf.tobytes()
 
-    def _verify_buffer(self, buf: memoryview, hash: bytes, msg: str = "buffer"):
-        if self.verify:
+    def _verify_buffer(
+        self, buf: memoryview, hash: bytes, msg: str = "buffer", force: bool = False
+    ):
+        if self.verify or force:
             _log.debug("verifying %s", msg)
             bhash = hash_buffer(buf)
             if bhash != hash:

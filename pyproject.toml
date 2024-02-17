@@ -24,6 +24,7 @@ dependencies = [
   "msgpack >= 1.0",           # p2c: -s msgpack-python
   "numcodecs >= 0.12",
   "typing-extensions ~= 4.8",
+  "prettytable ~= 3.5",
 ]
 
 [project.optional-dependencies]
@@ -35,7 +36,7 @@ dev = [
   "ruff",
   "pyright",
   "copier",
-  "unbeheader",         # p2c: -p
+  "unbeheader",        # p2c: -p
   "ipython",
   "pyproject2conda",
   "sphinx-autobuild",
@@ -70,6 +71,11 @@ version_scheme = "guess-next-dev"
 # settings for generating conda environments for dev & CI, when needed
 [tool.pyproject2conda]
 channels = ["conda-forge"]
+
+[tool.coverage.report]
+omit = [
+  "binpickle/__main__.py",
+]
 
 [tool.ruff]
 line-length = 100
