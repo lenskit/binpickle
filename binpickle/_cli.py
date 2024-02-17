@@ -43,10 +43,11 @@ Print information from a binpickle file.
     return parser.parse_args(args)
 
 
-def init_cli(opts: argparse.Namespace):
+def init_cli(opts: argparse.Namespace, init_log: bool):
     "Initialize CLI environment (logging, etc.)"
     level = logging.DEBUG if opts.verbose else logging.INFO
-    logging.basicConfig(stream=sys.stderr, level=level)
+    if init_log:
+        logging.basicConfig(stream=sys.stderr, level=level)
 
 
 def list_buffers(bpf: BinPickleFile, opts: argparse.Namespace):
@@ -95,13 +96,15 @@ def verify_buffers(bpf: BinPickleFile, opts: argparse.Namespace):
         except IntegrityError as e:
             _log.error("buffer %d invalid: %s", i, e)
             nbad += 1
+        finally:
+            buf.release()
 
     return nbad > 0
 
 
-def main(args: Optional[Sequence[str]] = None):
+def main(args: Optional[Sequence[str]] = None, init_log=False):
     opts = parse_cli(args)
-    init_cli(opts)
+    init_cli(opts, init_log)
 
     _log.info("opening %s", opts.FILE)
     failed = False
