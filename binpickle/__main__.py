@@ -2,6 +2,8 @@
 Entry point for Binpickle CLI tool.
 """
 
+import sys
+
 from ._cli import main
 
-main()
+sys.exit(main())

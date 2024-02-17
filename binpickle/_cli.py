@@ -12,6 +12,8 @@ from typing import Optional, Sequence
 
 import prettytable as pt
 
+from binpickle.errors import IntegrityError
+
 from . import BinPickleFile
 from .format import pretty_codec
 
@@ -36,6 +38,7 @@ Print information from a binpickle file.
     dump.add_argument(
         "-D", "--disassemble", action="store_true", help="disassemble the pickle data"
     )
+    dump.add_argument("-V", "--verify", action="store_true", help="verify buffer checksums")
 
     return parser.parse_args(args)
 
@@ -48,14 +51,14 @@ def init_cli(opts: argparse.Namespace):
 
 def list_buffers(bpf: BinPickleFile, opts: argparse.Namespace):
     table = pt.PrettyTable()
-    table.field_names = ["#", "Length", "Enc. Len.", "Type", "Shape", "Codec"]
+    table.field_names = ["#", "Offset", "Length", "Enc. Len.", "Type", "Shape", "Codec"]
     table.align = "r"
     table.align["Type"] = "c"  # pyright: ignore
     table.align["Shape"] = "c"  # pyright: ignore
     table.align["Codec"] = "c"  # pyright: ignore
     table.vrules = pt.NONE
     for i, entry in enumerate(bpf.entries):
-        row = [i, entry.dec_length, entry.enc_length]
+        row = [i, entry.offset, entry.dec_length, entry.enc_length]
         if entry.info is None:
             row += ["", ""]
         else:
@@ -76,11 +79,32 @@ def disassemble_pickle(bpf: BinPickleFile, opts: argparse.Namespace):
     pickletools.dis(io.BytesIO(buf), sys.stdout)
 
 
+def verify_buffers(bpf: BinPickleFile, opts: argparse.Namespace):
+    nbad = 0
+
+    for i, entry in enumerate(bpf.entries):
+        assert bpf._mv is not None
+        start = entry.offset
+        end = start + entry.enc_length
+        buf = bpf._mv[start:end]
+        try:
+            _log.debug("buffer %d: verifying %d bytes", i, entry.enc_length)
+            _log.debug("buffer %d: hash %s", i, entry.hash.hex())
+            bpf._verify_buffer(buf, entry.hash, force=True)
+            _log.info("buffer %d (%d bytes) verified", i, entry.enc_length)
+        except IntegrityError as e:
+            _log.error("buffer %d invalid: %s", i, e)
+            nbad += 1
+
+    return nbad > 0
+
+
 def main(args: Optional[Sequence[str]] = None):
     opts = parse_cli(args)
     init_cli(opts)
 
     _log.info("opening %s", opts.FILE)
+    failed = False
     with BinPickleFile(opts.FILE) as bpf:
         _log.info("%s: opened file with version %s", opts.FILE, bpf.header.version)
         _log.info("%s: flags: %d (%s)", opts.FILE, bpf.header.flags._value_, bpf.header.flags)
@@ -92,3 +116,9 @@ def main(args: Optional[Sequence[str]] = None):
 
         if opts.disassemble:
             disassemble_pickle(bpf, opts)
+
+        if opts.verify:
+            if verify_buffers(bpf, opts):
+                failed = True
+
+    return 3 if failed else 0

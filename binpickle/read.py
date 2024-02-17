@@ -221,8 +221,10 @@ class BinPickleFile:
             _log.debug("copying %d bytes from %d", length, start)
             return buf.tobytes()
 
-    def _verify_buffer(self, buf: memoryview, hash: bytes, msg: str = "buffer"):
-        if self.verify:
+    def _verify_buffer(
+        self, buf: memoryview, hash: bytes, msg: str = "buffer", force: bool = False
+    ):
+        if self.verify or force:
             _log.debug("verifying %s", msg)
             bhash = hash_buffer(buf)
             if bhash != hash:
