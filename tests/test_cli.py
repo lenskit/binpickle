@@ -1,4 +1,4 @@
-import re
+# pyright: basic
 from os import fspath
 from pathlib import Path
 from typing import Generator
