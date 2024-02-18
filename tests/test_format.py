@@ -7,14 +7,14 @@
 from pytest import raises
 
 from binpickle.errors import FormatError
-from binpickle.format import FileHeader, FileTrailer, HEADER_FORMAT, TRAILER_FORMAT, Flags
+from binpickle.format import HEADER_FORMAT, TRAILER_FORMAT, FileHeader, FileTrailer, Flags
 
 
 def test_format_sizes():
     assert HEADER_FORMAT.size == 16
     assert FileHeader.SIZE == 16
-    assert TRAILER_FORMAT.size == 44
-    assert FileTrailer.SIZE == 44
+    assert TRAILER_FORMAT.size == 76
+    assert FileTrailer.SIZE == 76
 
 
 def test_pack_default_header():

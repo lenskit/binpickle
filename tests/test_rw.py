@@ -52,7 +52,7 @@ def test_empty(tmp_path):
     with BinPickler(file) as w:
         w._finish_file()
 
-    assert file.stat().st_size == 61
+    assert file.stat().st_size == 93
 
     with BinPickleFile(file) as bpf:
         assert len(bpf.entries) == 0

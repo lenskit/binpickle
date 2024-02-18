@@ -170,7 +170,7 @@ class BinPickleFile:
         assert self._mv is not None, "file not open"
 
         buf = self._mv[tpos:]
-        assert len(buf) == 44
+        assert len(buf) == FileTrailer.SIZE
         self.trailer = FileTrailer.decode(buf)
 
         i_start = self.trailer.offset
