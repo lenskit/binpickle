@@ -180,7 +180,7 @@ class FileTrailer:
         """
         off, len, ck, mac = TRAILER_FORMAT.unpack(buf)
         if verify and mac != b"\0" * 32:
-            raise ValueError("nonzero MACs not supported")
+            raise FormatError("nonzero MACs not supported")
         return cls(off, len, ck, mac)
 
 
