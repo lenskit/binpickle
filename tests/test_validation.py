@@ -4,15 +4,15 @@
 # Licensed under the MIT license, see LICENSE.md for details.
 # SPDX-License-Identifier: MIT
 
-import os
 import logging
+import os
 
 import numpy as np
 import pandas as pd
 
 import pytest
 
-from binpickle import dump, BinPickleFile
+from binpickle import BinPickleFile, dump
 from binpickle.errors import IntegrityError
 
 _log = logging.getLogger(__name__)
@@ -36,7 +36,7 @@ def test_verfy_index(tmp_path, rng: np.random.Generator):
     stat = os.stat(file)
     _log.info("%s: length %d", file, stat.st_size)
     with open(file, "r+b") as f:
-        f.seek(stat.st_size - 2)
+        f.seek(stat.st_size - 34)
         f.write(b"XX")
 
     # try to read the file

@@ -32,7 +32,7 @@ Type of buffer type (and size/shape) information.
 MAGIC = b"BPCK"
 VERSION = 2
 HEADER_FORMAT = struct.Struct("!4sHHq")
-TRAILER_FORMAT = struct.Struct("!QL32s")
+TRAILER_FORMAT = struct.Struct("!QL32s32s")
 
 
 def pretty_codec(codec: CodecSpec | list[CodecSpec] | None) -> str:
@@ -150,6 +150,8 @@ class FileTrailer:
     1. Index start (8 bytes, big-endian).  Measured in bytes from the start of the file.
     2. Index length (4 bytes, big-endian). The number of bytes in the index.
     3. Index digest (32 bytes). The SHA256 digest of the index data.
+    4. Reserved digest (32 bytes).  Currently set to all 0s; this is to leave space for
+       future support of MAC authentication of binpickle files.
     """
 
     SIZE = TRAILER_FORMAT.size
@@ -160,10 +162,12 @@ class FileTrailer:
     "Length of the file index."
     hash: bytes
     "SHA-256 digest of the file index."
+    reserved: bytes = field(default_factory=lambda: b"\0" * 32)
+    "Rserved for future MAC of the file contents."
 
     def encode(self):
         "Encode the file trailer as bytes."
-        return TRAILER_FORMAT.pack(self.offset, self.length, self.hash)
+        return TRAILER_FORMAT.pack(self.offset, self.length, self.hash, self.reserved)
 
     @classmethod
     def decode(cls, buf: bytes | bytearray | memoryview, *, verify: bool = True) -> FileTrailer:
@@ -172,10 +176,12 @@ class FileTrailer:
 
         Args:
             buf: Buffer containing the trailer to decode.
-            verify: Whether to verify invalid trailer data (currently ignored).
+            verify: Whether to verify invalid trailer data.
         """
-        off, len, ck = TRAILER_FORMAT.unpack(buf)
-        return cls(off, len, ck)
+        off, len, ck, mac = TRAILER_FORMAT.unpack(buf)
+        if verify and mac != b"\0" * 32:
+            raise ValueError("nonzero MACs not supported")
+        return cls(off, len, ck, mac)
 
 
 @dataclass
