@@ -3,19 +3,16 @@
 # Copyright (C) 2023-2024 Drexel University
 # Licensed under the MIT license, see LICENSE.md for details.
 # SPDX-License-Identifier: MIT
+# pyright: basic
 
-import logging
-
-from hypothesis import given
 import hypothesis.strategies as st
+from hypothesis import given
 
 from binpickle.write import _align_pos
 
-_log = logging.getLogger(__name__)
-
 
 @given(st.integers(100, 10000000))
-def test_align(n):
+def test_align(n: int):
     res = _align_pos(n, 1024)
     assert res >= n
     assert res % 1024 == 0

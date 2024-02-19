@@ -3,9 +3,11 @@
 # Copyright (C) 2023-2024 Drexel University
 # Licensed under the MIT license, see LICENSE.md for details.
 # SPDX-License-Identifier: MIT
+# pyright: basic
 
 import logging
 import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -18,7 +20,7 @@ from binpickle.errors import FormatError, IntegrityError
 _log = logging.getLogger(__name__)
 
 
-def test_verfy_unsupported_mac(tmp_path, rng: np.random.Generator):
+def test_verfy_unsupported_mac(tmp_path: Path, rng: np.random.Generator):
     "Nonzero MAC should fail"
     file = tmp_path / "data.bpk"
 
@@ -45,7 +47,7 @@ def test_verfy_unsupported_mac(tmp_path, rng: np.random.Generator):
             pass
 
 
-def test_verfy_index(tmp_path, rng: np.random.Generator):
+def test_verfy_index(tmp_path: Path, rng: np.random.Generator):
     "Index hash mismatch should fail"
     file = tmp_path / "data.bpk"
 
@@ -72,7 +74,7 @@ def test_verfy_index(tmp_path, rng: np.random.Generator):
             pass
 
 
-def test_verfy_buffer(tmp_path, rng: np.random.Generator):
+def test_verfy_buffer(tmp_path: Path, rng: np.random.Generator):
     "Corrupt buffer should fail hash."
     file = tmp_path / "data.bpk"
 

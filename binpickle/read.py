@@ -91,7 +91,7 @@ class BinPickleFile:
         self.close()
         return False
 
-    def load(self) -> object:
+    def load(self) -> Any:
         """
         Load the object from the binpickle file.
         """
@@ -231,7 +231,7 @@ class BinPickleFile:
                 raise IntegrityError(f"{msg} has incorrect hash, corrupt file?")
 
 
-def load(file: str | PathLike[str]) -> object:
+def load(file: str | PathLike[str]) -> Any:
     """
     Load an object from a BinPickle file.
 
