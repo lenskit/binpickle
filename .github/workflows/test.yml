@@ -39,8 +39,13 @@ jobs:
 
     - name: Set up dependencies
       run: |
+        which python
         pip install uv
         uv pip install -e '.[test]'
+
+    - name: Inspect environment
+      run: |
+        pip list
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
@@ -76,6 +81,11 @@ jobs:
       run: |
         pip install uv
         uv pip install --resolution lowest -e '.[test]'
+
+    - name: Inspect environment
+      run: |
+        pip list
+
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
