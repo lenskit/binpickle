@@ -12,13 +12,14 @@ concurrency:
 jobs:
   test:
     name: Test with Python ${{matrix.python}} on ${{matrix.platform}}
-    runs-on: ${{matrix.platform}}-latest
+    runs-on: ${{matrix.platform}}
     strategy:
       matrix:
         platform:
-        - macos
-        - windows
-        - ubuntu
+        - macos-latest
+        - windows-latest
+        - ubuntu-latest
+        - macos-14
         python:
         - "3.10"
         - "3.11"
