@@ -39,7 +39,8 @@ jobs:
 
     - name: Set up dependencies
       run: |
-        pip install -e '.[test]'
+        pip install uv
+        uv pip install -e '.[test]'
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
