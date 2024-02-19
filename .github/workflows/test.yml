@@ -83,12 +83,12 @@ jobs:
     - name: Save test results
       uses: lenskit/lkbuild/actions/save-test-results@main
       with:
-        artifact-name: test-${{matrix.platform}}-py${{matrix.python}}
+        artifact-name: test-min-${{matrix.platform}}
 
   report:
     name: Process test results
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [test, test-min-deps]
 
     steps:
     - uses: actions/checkout@v4
