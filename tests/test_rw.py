@@ -3,6 +3,7 @@
 # Copyright (C) 2023-2024 Drexel University
 # Licensed under the MIT license, see LICENSE.md for details.
 # SPDX-License-Identifier: MIT
+# pyright: basic
 
 import gc
 import itertools as it
@@ -45,7 +46,7 @@ RW_CONFIGS = it.product(RW_CTORS, [False, True])
 RW_PARAMS = ["writer", "direct"]
 
 
-def test_empty(tmp_path):
+def test_empty(tmp_path: Path):
     "Write a file with nothing in it"
     file = tmp_path / "data.bpk"
 
@@ -58,7 +59,7 @@ def test_empty(tmp_path):
         assert len(bpf.entries) == 0
 
 
-def test_write_buf(tmp_path, rng: np.random.Generator):
+def test_write_buf(tmp_path: Path, rng: np.random.Generator):
     "Write a file with a single array"
     file = tmp_path / "data.bpk"
 
@@ -74,6 +75,7 @@ def test_write_buf(tmp_path, rng: np.random.Generator):
         assert e.dec_length == a.nbytes
         assert e.enc_length == a.nbytes
         b2 = bpf._read_buffer(e)
+        assert isinstance(b2, memoryview)
         assert b2.nbytes == e.dec_length
         a2 = np.frombuffer(b2, dtype="i4")
         assert len(a2) == len(a)
@@ -109,7 +111,7 @@ def test_write_encoded_arrays(arrays, codec):
                     gc.collect()
 
 
-def test_pickle_array(tmp_path, rng: np.random.Generator):
+def test_pickle_array(tmp_path: Path, rng: np.random.Generator):
     "Pickle a NumPy array"
     file = tmp_path / "data.bpk"
 
@@ -126,7 +128,7 @@ def test_pickle_array(tmp_path, rng: np.random.Generator):
 
 
 @pytest.mark.parametrize(RW_PARAMS, RW_CONFIGS)
-def test_pickle_frame(tmp_path, rng: np.random.Generator, writer, direct):
+def test_pickle_frame(tmp_path: Path, rng: np.random.Generator, writer, direct):
     "Pickle a Pandas data frame"
     file = tmp_path / "data.bpk"
 
@@ -151,7 +153,7 @@ def test_pickle_frame(tmp_path, rng: np.random.Generator, writer, direct):
         del df2
 
 
-def test_pickle_frame_dyncodec(tmp_path, rng: np.random.Generator):
+def test_pickle_frame_dyncodec(tmp_path: Path, rng: np.random.Generator):
     file = tmp_path / "data.bpk"
 
     df = pd.DataFrame(
@@ -168,7 +170,7 @@ def test_pickle_frame_dyncodec(tmp_path, rng: np.random.Generator):
             print("compacting double array")
             return nc.AsType("f4", "f8")
         else:
-            None
+            return None
 
     with BinPickler(file, codecs=[codec, nc.Blosc("zstd", 3)]) as w:
         w.dump(df)
@@ -185,7 +187,7 @@ def test_pickle_frame_dyncodec(tmp_path, rng: np.random.Generator):
         assert bpf.entries[0].info
 
 
-def test_dump_frame(tmp_path, rng: np.random.Generator):
+def test_dump_frame(tmp_path: Path, rng: np.random.Generator):
     "Pickle a Pandas data frame"
     file = tmp_path / "data.bpk"
 

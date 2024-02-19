@@ -39,7 +39,13 @@ jobs:
 
     - name: Set up dependencies
       run: |
-        pip install -e '.[test]'
+        which python
+        pip install uv
+        uv pip install -e '.[test]'
+
+    - name: Inspect environment
+      run: |
+        pip list
 
     - name: Run tests
       run: python -m pytest --cov=binpickle --cov-report=xml tests
@@ -49,10 +55,50 @@ jobs:
       with:
         artifact-name: test-${{matrix.platform}}-py${{matrix.python}}
 
+  test-min-deps:
+    name: Test with Minimum Dependencies
+    runs-on: ${{matrix.platform}}-latest
+    strategy:
+      matrix:
+        platform:
+        - macos
+        - windows
+        - ubuntu
+        python:
+        - "3.10"
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{matrix.python}}
+
+    - name: Set up dependencies
+      run: |
+        pip install uv
+        uv pip install --resolution lowest -e '.[test]'
+
+    - name: Inspect environment
+      run: |
+        pip list
+
+
+    - name: Run tests
+      run: python -m pytest --cov=binpickle --cov-report=xml tests
+
+    - name: Save test results
+      uses: lenskit/lkbuild/actions/save-test-results@main
+      with:
+        artifact-name: test-min-${{matrix.platform}}
+
   report:
     name: Process test results
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [test, test-min-deps]
 
     steps:
     - uses: actions/checkout@v4
